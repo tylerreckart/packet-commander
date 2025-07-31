@@ -2,7 +2,7 @@
 
 8-button WiFi controller for IoT projects, smart home control, and network automation.
 
-![PATCOM](./assets/patcom.jpg)
+![PATCOM](./assets/patcom.png)
 
 ## Overview
 
@@ -27,11 +27,7 @@ PATCOM provides 8 buttons with WiFi connectivity. Press a button to send network
 - Install ArduinoJson library
 
 ### 2. Configure Firmware
-Open `firmware/outlets.cpp` and set your WiFi:
-```cpp
-const char* WIFI_SSID = "YourNetwork";
-const char* WIFI_PASS = "YourPassword";
-```
+Any custom firmware may be flashed to the Arduino to take complete control over the circuit. I am currently working on a GUI configuration tool that can be used to program the controller in a much more user-friendly manner. **This is still under heavy development.**
 
 ### 3. Upload
 - Connect Arduino via USB-C

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATCOM Configuration</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>Packet Commander Configurator</h1>
+            <div class="device-status">
+                <span id="connection-status" class="status-disconnected">Disconnected</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="buttons">Button Configuration</button>
+            <button class="tab-button" data-tab="devices">Device Manager</button>
+            <button class="tab-button" data-tab="apikeys">API Keys</button>
+            <button class="tab-button" data-tab="network">Network Settings</button>
+            <button class="tab-button" data-tab="modes">Modes</button>
+            <button class="tab-button" data-tab="device">Connection</button>
+        </nav>
+
+        <main class="content">
+            <!-- Button Configuration Tab -->
+            <div id="buttons-tab" class="tab-content active">
+                <div class="button-grid">
+                    <div class="button-config" data-button="0">
+                        <div class="button-visual">
+                            <div class="button-circle">0</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 0">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="1">
+                        <div class="button-visual">
+                            <div class="button-circle">1</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 1">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="2">
+                        <div class="button-visual">
+                            <div class="button-circle">2</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 2">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="3">
+                        <div class="button-visual">
+                            <div class="button-circle">3</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 3">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="4">
+                        <div class="button-visual">
+                            <div class="button-circle">4</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 4">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="5">
+                        <div class="button-visual">
+                            <div class="button-circle">5</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 5">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="6">
+                        <div class="button-visual">
+                            <div class="button-circle">6</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 6">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config" data-button="7">
+                        <div class="button-visual">
+                            <div class="button-circle">7</div>
+                            <div class="button-led"></div>
+                        </div>
+                        <div class="button-controls">
+                            <label>Name:</label>
+                            <input type="text" class="button-name" value="Button 7">
+                            <label>Action:</label>
+                            <select class="button-action">
+                                <option value="none">None</option>
+                                <option value="http">HTTP Request</option>
+                                <option value="webhook">Webhook</option>
+                                <option value="midi">MIDI Note</option>
+                                <option value="osc">OSC Message</option>
+                                <option value="script">Custom Script</option>
+                                <option value="serial">Serial Command</option>
+                            </select>
+                            <div class="action-config"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Manager Tab -->
+            <div id="devices-tab" class="tab-content">
+                <div class="device-manager">
+                    <div class="device-controls">
+                        <button id="discover-devices" class="btn-primary">Discover Devices</button>
+                        <button id="sync-all-devices" class="btn-secondary">Sync All</button>
+                        <span id="discovery-status">Ready</span>
+                    </div>
+                    
+                    <div class="discovered-devices">
+                        <h3>Discovered Devices</h3>
+                        <div id="device-list" class="device-grid">
+                            <div class="no-devices">No devices discovered. Click "Discover Devices" to scan.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Keys Tab -->
+            <div id="apikeys-tab" class="tab-content">
+                <div class="api-keys-panel">
+                    <h3>API Keys & Configuration</h3>
+                    <p class="panel-description">Store API keys and configuration data that can be referenced by button actions and scripts using <code>apiKeys.keyName</code>.</p>
+                    
+                    <div class="api-keys-section">
+                        <h4>API Keys</h4>
+                        <div class="api-keys-list" id="api-keys-list">
+                            <!-- API keys will be generated here -->
+                        </div>
+                        <button id="add-api-key" class="btn-secondary">Add API Key</button>
+                    </div>
+                    
+                    <div class="custom-config-section">
+                        <h4>Custom Configuration</h4>
+                        <div class="form-group">
+                            <label for="custom-config">JSON Configuration:</label>
+                            <textarea id="custom-config" rows="8" placeholder='{\n  "server_url": "https://api.example.com",\n  "mqtt_broker": "mqtt.example.com",\n  "thresholds": {\n    "temperature": 25.5,\n    "humidity": 60\n  }\n}'></textarea>
+                            <small>Custom JSON data available to scripts as <code>config.custom</code></small>
+                        </div>
+                    </div>
+                    
+                    <div class="api-actions">
+                        <button id="test-api-keys" class="btn-primary">Test API Keys</button>
+                        <button id="save-api-config" class="btn-secondary">Save Configuration</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Settings Tab -->
+            <div id="network-tab" class="tab-content">
+                <div class="settings-panel">
+                    <h3>WiFi Configuration</h3>
+                    <div class="form-group">
+                        <label for="wifi-ssid">Network Name (SSID):</label>
+                        <input type="text" id="wifi-ssid" placeholder="Enter WiFi network name">
+                    </div>
+                    <div class="form-group">
+                        <label for="wifi-password">Password:</label>
+                        <input type="password" id="wifi-password" placeholder="Enter WiFi password">
+                    </div>
+                    
+                    <h3>IP Configuration</h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="static-ip"> Use Static IP
+                        </label>
+                    </div>
+                    <div id="static-ip-config" class="ip-config" style="display: none;">
+                        <div class="form-group">
+                            <label for="ip-address">IP Address:</label>
+                            <input type="text" id="ip-address" placeholder="192.168.1.100">
+                        </div>
+                        <div class="form-group">
+                            <label for="subnet-mask">Subnet Mask:</label>
+                            <input type="text" id="subnet-mask" placeholder="255.255.255.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="gateway">Gateway:</label>
+                            <input type="text" id="gateway" placeholder="192.168.1.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modes Tab -->
+            <div id="modes-tab" class="tab-content">
+                <div class="modes-panel">
+                    <h3>Built-in Modes</h3>
+                    <div class="mode-option">
+                        <h4>MIDI Controller</h4>
+                        <p>Transform PATCOM into a MIDI note generator for music production</p>
+                        <div class="midi-config">
+                            <div class="form-group">
+                                <label for="midi-channel">MIDI Channel:</label>
+                                <select id="midi-channel">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="base-note">Base Note:</label>
+                                <select id="base-note">
+                                    <option value="60">C4 (Middle C)</option>
+                                    <option value="48">C3</option>
+                                    <option value="72">C5</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Tab -->
+            <div id="device-tab" class="tab-content">
+                <div class="device-panel">
+                    <h3>Device Connection</h3>
+                    <div class="form-group">
+                        <label for="serial-port">Serial Port:</label>
+                        <select id="serial-port">
+                            <option value="">Select a port...</option>
+                        </select>
+                        <button id="refresh-ports">Refresh</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="baud-rate">Baud Rate:</label>
+                        <select id="baud-rate">
+                            <option value="9600">9600</option>
+                            <option value="57600">57600</option>
+                            <option value="115200" selected>115200</option>
+                        </select>
+                    </div>
+                    <div class="connection-controls">
+                        <button id="connect-device" class="btn-primary">Connect</button>
+                        <button id="disconnect-device" class="btn-secondary" disabled>Disconnect</button>
+                    </div>
+                    
+                    <h3>Device Information</h3>
+                    <div class="device-info">
+                        <div class="info-item">
+                            <span class="label">Status:</span>
+                            <span id="device-status">Disconnected</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Battery:</span>
+                            <span id="battery-level">Unknown</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">WiFi:</span>
+                            <span id="wifi-status">Unknown</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

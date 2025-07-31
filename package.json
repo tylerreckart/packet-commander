@@ -1,0 +1,43 @@
+{
+  "name": "patcom-config",
+  "version": "1.0.0",
+  "description": "Packet Commander Configurator",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never"
+  },
+  "keywords": ["patcom", "button-matrix", "iot", "configuration"],
+  "author": "PATCOM",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "serialport": "^12.0.0",
+    "midi": "^2.0.0"
+  },
+  "build": {
+    "appId": "com.patcom.config",
+    "productName": "Packet Commander Configurator",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

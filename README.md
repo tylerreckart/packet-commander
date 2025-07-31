@@ -1,4 +1,4 @@
-# PATCOM - Packet Commander
+# Packet Commander
 
 8-button WiFi controller for IoT projects, smart home control, and network automation.
 

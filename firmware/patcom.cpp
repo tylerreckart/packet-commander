@@ -21,6 +21,12 @@ const unsigned long STATUS_LED_BLINK = 500;
 const int DISCOVERY_PORT = 12345;
 const int CONFIG_PORT = 12346;
 
+// Power management constants
+const unsigned long SLEEP_TIMEOUT = 300000;  // 5 minutes of inactivity before sleep
+const unsigned long LOW_BATTERY_THRESHOLD = 6000;  // 6.0V threshold for low battery
+const unsigned long CRITICAL_BATTERY_THRESHOLD = 5500;  // 5.5V critical battery
+const unsigned long POWER_CHECK_INTERVAL = 30000;  // Check power every 30 seconds
+
 // Pin assignments
 const int buttonPins[8] = {2, 3, 4, 5, 6, 7, 8, 9};
 const int ledPins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
@@ -123,6 +129,23 @@ float batteryVoltage = 9.0;
 bool wifiConnected = false;
 bool configMode = false;
 
+// Power management state
+unsigned long lastActivity = 0;
+unsigned long lastPowerCheck = 0;
+bool lowPowerMode = false;
+bool criticalBattery = false;
+RTC_DATA_ATTR int bootCount = 0;
+
+// Status LED states
+enum StatusLedMode {
+  STATUS_OFF = 0,
+  STATUS_CONNECTING,
+  STATUS_ACTIVE,
+  STATUS_LOW_POWER,
+  STATUS_ERROR
+};
+StatusLedMode currentStatusMode = STATUS_OFF;
+
 // Forward declarations
 void setupPins();
 void loadConfiguration();
@@ -156,27 +179,72 @@ String generateConfigHash();
 void validateConfiguration();
 bool isValidIP(const char* ip);
 bool isValidUrl(const char* url);
+void checkPowerManagement();
+void enterDeepSleep();
+void updateActivity();
+void configurePowerSaving();
+void updateStatusLED();
+void setStatusLED(StatusLedMode mode);
 
 void setup() {
   Serial.begin(115200);
   delay(100);
   
+  // Increment boot count for debugging
+  ++bootCount;
+  
   Serial.println("\n=== PATCOM CONFIGURABLE v" + String(VERSION) + " ===");
+  Serial.println("Boot #" + String(bootCount));
   Serial.println("Initializing...");
+  
+  // Setup hardware first to control status LED
+  setupPins();
+  
+  // Flash status LED to indicate wake/boot
+  for (int i = 0; i < 6; i++) {
+    digitalWrite(STATUS_LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(STATUS_LED_PIN, LOW);
+    delay(100);
+  }
+  
+  // Print wakeup reason
+  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  switch(wakeup_reason) {
+    case ESP_SLEEP_WAKEUP_EXT0:
+      Serial.println("Wakeup caused by button press");
+      break;
+    case ESP_SLEEP_WAKEUP_TIMER:
+      Serial.println("Wakeup caused by timer");
+      break;
+    case ESP_SLEEP_WAKEUP_UNDEFINED:
+    default:
+      Serial.println("Fresh start or reset");
+      break;
+  }
   
   // Initialize SPIFFS for configuration storage
   if (!SPIFFS.begin(true)) {
     Serial.println("ERROR: SPIFFS Mount Failed");
+    setStatusLED(STATUS_ERROR);
+    delay(2000);
   }
   
-  // Setup hardware
-  setupPins();
+  // Configure power saving features
+  configurePowerSaving();
   
   // Load configuration from flash
   loadConfiguration();
   
   // Validate configuration
   validateConfiguration();
+  
+  // Initialize activity tracking
+  lastActivity = millis();
+  lastPowerCheck = millis();
+  
+  // Set status LED to connecting mode before WiFi
+  setStatusLED(STATUS_CONNECTING);
   
   // Connect to WiFi
   connectWiFi();
@@ -206,6 +274,13 @@ void setup() {
     broadcastDiscovery();
   }
   
+  // Set final status LED state
+  if (wifiConnected) {
+    setStatusLED(STATUS_ACTIVE);
+  } else {
+    setStatusLED(STATUS_ERROR);
+  }
+  
   Serial.println("Setup complete!");
   Serial.println("Commands: CONFIG, STATUS, WIFI, BATTERY, HELP");
   sendDeviceInfo();
@@ -220,6 +295,7 @@ void loop() {
     if (digitalRead(buttonPins[i]) == LOW) {
       if (millis() - lastButtonPress[i] > BUTTON_DEBOUNCE) {
         lastButtonPress[i] = millis();
+        updateActivity();  // Record activity for power management
         handleButtonPress(i);
       }
     }
@@ -237,26 +313,28 @@ void loop() {
     lastBatteryCheck = millis();
   }
   
-  // Update status LED
-  if (millis() - lastStatusBlink > STATUS_LED_BLINK) {
-    statusLedState = !statusLedState;
-    digitalWrite(STATUS_LED_PIN, statusLedState ? HIGH : LOW);
-    lastStatusBlink = millis();
+  // Check power management
+  if (millis() - lastPowerCheck > POWER_CHECK_INTERVAL) {
+    checkPowerManagement();
+    lastPowerCheck = millis();
   }
+  
+  // Update status LED
+  updateStatusLED();
   
   // Handle serial commands
   handleSerialCommands();
   
-  // Periodic discovery broadcast (every 30 seconds)
+  // Periodic discovery broadcast (every 30 seconds, disabled in low power mode)
   static unsigned long lastDiscoveryBroadcast = 0;
-  if (deviceConfig.discoverable && wifiConnected && (millis() - lastDiscoveryBroadcast > 30000)) {
+  if (deviceConfig.discoverable && wifiConnected && !lowPowerMode && (millis() - lastDiscoveryBroadcast > 30000)) {
     broadcastDiscovery();
     lastDiscoveryBroadcast = millis();
   }
   
-  // Periodic config sync (every 60 seconds)
+  // Periodic config sync (every 60 seconds, disabled in low power mode)
   static unsigned long lastConfigSync = 0;
-  if (deviceConfig.autoSync && wifiConnected && (millis() - lastConfigSync > 60000)) {
+  if (deviceConfig.autoSync && wifiConnected && !lowPowerMode && (millis() - lastConfigSync > 60000)) {
     syncConfigWithServer();
     lastConfigSync = millis();
   }
@@ -264,7 +342,14 @@ void loop() {
   // Update LEDs
   updateLEDs();
   
-  delay(10);
+  // Variable delay based on power mode
+  if (criticalBattery) {
+    delay(100);  // Minimal delay in critical mode
+  } else if (lowPowerMode) {
+    delay(50);   // Longer delay in low power mode
+  } else {
+    delay(10);   // Normal operation
+  }
 }
 
 void setupPins() {
@@ -391,6 +476,7 @@ void connectWiFi() {
   if (strlen(networkConfig.ssid) == 0) {
     Serial.println("No WiFi credentials - entering config mode");
     configMode = true;
+    setStatusLED(STATUS_ERROR);
     return;
   }
   
@@ -417,9 +503,10 @@ void connectWiFi() {
     Serial.print(".");
     attempts++;
     
-    // Blink LEDs during connection
+    // Status LED will automatically blink in CONNECTING mode
+    // Keep button LEDs off during connection
     for (int i = 0; i < 8; i++) {
-      digitalWrite(ledPins[i], (attempts % 2) ? HIGH : LOW);
+      digitalWrite(ledPins[i], LOW);
     }
   }
   
@@ -428,14 +515,12 @@ void connectWiFi() {
     Serial.println("\nWiFi connected!");
     Serial.println("IP address: " + WiFi.localIP().toString());
     
-    // Turn off all LEDs
-    for (int i = 0; i < 8; i++) {
-      digitalWrite(ledPins[i], LOW);
-    }
+    // Status LED will be set to ACTIVE in setup()
   } else {
     wifiConnected = false;
     Serial.println("\nWiFi connection failed - entering config mode");
     configMode = true;
+    setStatusLED(STATUS_ERROR);
     
     // Start AP mode for configuration
     WiFi.mode(WIFI_AP);
@@ -517,6 +602,9 @@ void handleButtonPress(int buttonIndex) {
   if (buttonIndex < 0 || buttonIndex >= 8) return;
   
   Serial.println("Button " + String(buttonIndex) + " (" + String(buttonConfigs[buttonIndex].name) + ") pressed");
+  
+  // Record activity for power management
+  updateActivity();
   
   // Toggle LED for visual feedback
   ledStates[buttonIndex] = !ledStates[buttonIndex];
@@ -746,10 +834,17 @@ void checkBattery() {
   int adcValue = analogRead(BATTERY_PIN);
   batteryVoltage = (adcValue / 4095.0) * 3.3 * 4.03;  // Voltage divider calculation
   
-  if (batteryVoltage < 6.0) {
+  // Convert to millivolts for threshold comparison
+  unsigned long batteryMillivolts = (unsigned long)(batteryVoltage * 1000);
+  
+  if (batteryMillivolts < CRITICAL_BATTERY_THRESHOLD) {
     Serial.println("BATTERY:CRITICAL:" + String(batteryVoltage, 2));
-  } else if (batteryVoltage < 6.5) {
+    criticalBattery = true;
+  } else if (batteryMillivolts < LOW_BATTERY_THRESHOLD) {
     Serial.println("BATTERY:LOW:" + String(batteryVoltage, 2));
+    criticalBattery = false;
+  } else {
+    criticalBattery = false;
   }
 }
 
@@ -1246,5 +1341,156 @@ void removeApiKey(const char* keyName) {
       strcpy(apiKeys[i].value, "");
       return;
     }
+  }
+}
+
+// Power Management Functions
+
+void configurePowerSaving() {
+  // Configure CPU frequency scaling
+  setCpuFrequencyMhz(80);  // Reduce CPU frequency to save power
+  
+  // Configure WiFi power save mode
+  WiFi.setSleep(true);
+  
+  // Configure external wakeup on button press (any button can wake)
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_2, 0);  // Wake on button 0 (GPIO 2)
+  
+  Serial.println("Power saving configured");
+}
+
+void updateActivity() {
+  lastActivity = millis();
+  
+  // Exit low power mode if we were in it
+  if (lowPowerMode) {
+    lowPowerMode = false;
+    setCpuFrequencyMhz(240);  // Return to full speed
+    WiFi.setSleep(false);
+    setStatusLED(STATUS_ACTIVE);
+    Serial.println("Exiting low power mode");
+  }
+}
+
+void checkPowerManagement() {
+  unsigned long inactiveTime = millis() - lastActivity;
+  
+  // Check if we should enter low power mode
+  if (!lowPowerMode && inactiveTime > 60000) {  // 1 minute of inactivity
+    lowPowerMode = true;
+    setCpuFrequencyMhz(80);   // Reduce CPU speed
+    WiFi.setSleep(true);      // Enable WiFi sleep
+    setStatusLED(STATUS_LOW_POWER);
+    Serial.println("Entering low power mode");
+  }
+  
+  // Check if we should enter deep sleep
+  if (inactiveTime > SLEEP_TIMEOUT) {
+    Serial.println("No activity for " + String(SLEEP_TIMEOUT / 1000) + " seconds. Entering deep sleep...");
+    enterDeepSleep();
+  }
+  
+  // Force deep sleep if battery is critically low
+  if (criticalBattery) {
+    Serial.println("Critical battery level. Entering deep sleep to preserve power...");
+    enterDeepSleep();
+  }
+}
+
+void enterDeepSleep() {
+  // Save current state if needed
+  saveConfiguration();
+  
+  // Turn off all LEDs including status LED
+  setStatusLED(STATUS_OFF);
+  for (int i = 0; i < 8; i++) {
+    digitalWrite(ledPins[i], LOW);
+  }
+  
+  // Disconnect WiFi
+  if (wifiConnected) {
+    WiFi.disconnect();
+  }
+  
+  // Configure wake-up sources
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_2, 0);  // Wake on button 0 press
+  
+  // Optional: Wake up periodically to check battery or send heartbeat
+  esp_sleep_enable_timer_wakeup(30 * 60 * 1000000ULL);  // Wake every 30 minutes
+  
+  Serial.println("Entering deep sleep. Press any button to wake up.");
+  Serial.flush();
+  
+  // Enter deep sleep
+  esp_deep_sleep_start();
+}
+
+// Status LED Management Functions
+
+void setStatusLED(StatusLedMode mode) {
+  currentStatusMode = mode;
+  lastStatusBlink = millis();
+  
+  // Set immediate state for solid modes
+  switch (mode) {
+    case STATUS_OFF:
+      digitalWrite(STATUS_LED_PIN, LOW);
+      break;
+    case STATUS_ACTIVE:
+      digitalWrite(STATUS_LED_PIN, HIGH);
+      break;
+    case STATUS_CONNECTING:
+    case STATUS_LOW_POWER:
+    case STATUS_ERROR:
+      // These modes will blink, handled in updateStatusLED()
+      break;
+  }
+}
+
+void updateStatusLED() {
+  unsigned long currentTime = millis();
+  
+  switch (currentStatusMode) {
+    case STATUS_OFF:
+      digitalWrite(STATUS_LED_PIN, LOW);
+      break;
+      
+    case STATUS_ACTIVE:
+      digitalWrite(STATUS_LED_PIN, HIGH);
+      break;
+      
+    case STATUS_CONNECTING:
+      // Fast blink during WiFi connection
+      if (currentTime - lastStatusBlink > 250) {
+        statusLedState = !statusLedState;
+        digitalWrite(STATUS_LED_PIN, statusLedState ? HIGH : LOW);
+        lastStatusBlink = currentTime;
+      }
+      break;
+      
+    case STATUS_LOW_POWER:
+      // Slow blink in low power mode
+      if (currentTime - lastStatusBlink > 2000) {
+        statusLedState = !statusLedState;
+        digitalWrite(STATUS_LED_PIN, statusLedState ? HIGH : LOW);
+        lastStatusBlink = currentTime;
+      }
+      break;
+      
+    case STATUS_ERROR:
+      // Double blink pattern for errors
+      static int errorBlinkCount = 0;
+      if (currentTime - lastStatusBlink > 200) {
+        statusLedState = !statusLedState;
+        digitalWrite(STATUS_LED_PIN, statusLedState ? HIGH : LOW);
+        lastStatusBlink = currentTime;
+        errorBlinkCount++;
+        
+        if (errorBlinkCount >= 4) {  // Two complete blinks
+          errorBlinkCount = 0;
+          lastStatusBlink = currentTime + 800;  // Longer pause before repeating
+        }
+      }
+      break;
   }
 }

@@ -76,15 +76,6 @@ class PatcomConfigApp {
             this.updateNetworkConfig('gateway', e.target.value);
         });
 
-        // MIDI settings
-        document.getElementById('midi-channel').addEventListener('change', (e) => {
-            this.updateMIDIConfig('channel', parseInt(e.target.value));
-        });
-
-        document.getElementById('base-note').addEventListener('change', (e) => {
-            this.updateMIDIConfig('baseNote', parseInt(e.target.value));
-        });
-
         // Device settings
         document.getElementById('refresh-ports').addEventListener('click', () => {
             this.refreshSerialPorts();
@@ -107,6 +98,10 @@ class PatcomConfigApp {
             this.disconnectDevice();
         });
 
+        document.getElementById('upload-config').addEventListener('click', () => {
+            this.uploadConfiguration();
+        });
+
         // Device discovery controls
         document.getElementById('discover-devices').addEventListener('click', () => {
             this.discoverDevices();
@@ -114,23 +109,6 @@ class PatcomConfigApp {
 
         document.getElementById('sync-all-devices').addEventListener('click', () => {
             this.syncAllDevices();
-        });
-
-        // API Keys controls
-        document.getElementById('add-api-key').addEventListener('click', () => {
-            this.addApiKey();
-        });
-
-        document.getElementById('custom-config').addEventListener('change', (e) => {
-            this.updateCustomConfig(e.target.value);
-        });
-
-        document.getElementById('test-api-keys').addEventListener('click', () => {
-            this.testApiKeys();
-        });
-
-        document.getElementById('save-api-config').addEventListener('click', () => {
-            this.saveConfig();
         });
 
         // Listen for config updates from main process
@@ -348,15 +326,6 @@ class PatcomConfigApp {
         this.saveConfig();
     }
 
-    updateMIDIConfig(property, value) {
-        if (!this.config) return;
-        
-        if (!this.config.midi) {
-            this.config.midi = {};
-        }
-        this.config.midi[property] = value;
-        this.saveConfig();
-    }
 
     updateDeviceConfig(property, value) {
         if (!this.config) return;
@@ -393,29 +362,74 @@ class PatcomConfigApp {
         }
     }
 
-    connectDevice() {
-        // TODO: Implement device connection
-        console.log('Connecting to device...');
-        
-        // Simulate connection for UI testing
-        setTimeout(() => {
-            document.getElementById('connection-status').textContent = 'Connected';
-            document.getElementById('connection-status').className = 'status-connected';
-            document.getElementById('device-status').textContent = 'Connected';
+    async connectDevice() {
+        try {
+            const serialPort = document.getElementById('serial-port').value;
+            const baudRate = parseInt(document.getElementById('baud-rate').value);
+            
+            if (!serialPort) {
+                alert('Please select a serial port');
+                return;
+            }
+            
             document.getElementById('connect-device').disabled = true;
-            document.getElementById('disconnect-device').disabled = false;
-        }, 1000);
+            document.getElementById('connect-device').textContent = 'Connecting...';
+            
+            const result = await window.electronAPI.connectDevice(serialPort, baudRate);
+            
+            if (result.success) {
+                document.getElementById('connection-status').textContent = 'Connected';
+                document.getElementById('connection-status').className = 'status-connected';
+                document.getElementById('device-status').textContent = 'Connected';
+                document.getElementById('connect-device').disabled = true;
+                document.getElementById('disconnect-device').disabled = false;
+                document.getElementById('upload-config').disabled = false;
+                document.getElementById('connect-device').textContent = 'Connect';
+                this.deviceConnected = true;
+            }
+        } catch (error) {
+            console.error('Connection failed:', error);
+            alert('Failed to connect: ' + error.message);
+            document.getElementById('connect-device').disabled = false;
+            document.getElementById('connect-device').textContent = 'Connect';
+        }
     }
 
-    disconnectDevice() {
-        // TODO: Implement device disconnection
-        console.log('Disconnecting from device...');
-        
-        document.getElementById('connection-status').textContent = 'Disconnected';
-        document.getElementById('connection-status').className = 'status-disconnected';
-        document.getElementById('device-status').textContent = 'Disconnected';
-        document.getElementById('connect-device').disabled = false;
-        document.getElementById('disconnect-device').disabled = true;
+    async disconnectDevice() {
+        try {
+            await window.electronAPI.disconnectDevice();
+            
+            document.getElementById('connection-status').textContent = 'Disconnected';
+            document.getElementById('connection-status').className = 'status-disconnected';
+            document.getElementById('device-status').textContent = 'Disconnected';
+            document.getElementById('connect-device').disabled = false;
+            document.getElementById('disconnect-device').disabled = true;
+            document.getElementById('upload-config').disabled = true;
+            this.deviceConnected = false;
+        } catch (error) {
+            console.error('Disconnect failed:', error);
+        }
+    }
+
+    async uploadConfiguration() {
+        try {
+            document.getElementById('upload-config').disabled = true;
+            document.getElementById('upload-config').textContent = 'Uploading...';
+            
+            const result = await window.electronAPI.uploadConfig();
+            
+            if (result.success) {
+                alert('Configuration uploaded successfully!');
+            } else {
+                alert('Upload failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Upload failed: ' + error.message);
+        } finally {
+            document.getElementById('upload-config').disabled = false;
+            document.getElementById('upload-config').textContent = 'Upload Configuration';
+        }
     }
 
     updateUI() {
@@ -441,20 +455,8 @@ class PatcomConfigApp {
         
         this.toggleStaticIPConfig(this.config.network.staticIP);
         
-        // Update MIDI settings
-        if (this.config.midi) {
-            document.getElementById('midi-channel').value = this.config.midi.channel || 1;
-            document.getElementById('base-note').value = this.config.midi.baseNote || 60;
-        }
-        
         // Update device settings
         document.getElementById('baud-rate').value = this.config.device.baudRate || 115200;
-        
-        // Update custom config
-        document.getElementById('custom-config').value = this.config.customConfig || '{}';
-        
-        // Update API keys list
-        this.updateApiKeysList();
     }
 
     async saveConfig() {
@@ -616,191 +618,6 @@ class PatcomConfigApp {
         }
     }
 
-    updateApiKey(keyName, value) {
-        if (!this.config) return;
-        
-        if (!this.config.apiKeys) {
-            this.config.apiKeys = {};
-        }
-        this.config.apiKeys[keyName] = value;
-        this.saveConfig();
-    }
-
-    updateCustomConfig(value) {
-        if (!this.config) return;
-        
-        try {
-            JSON.parse(value); // Validate JSON
-            this.config.customConfig = value;
-            this.saveConfig();
-        } catch (error) {
-            console.error('Invalid JSON configuration:', error);
-            // TODO: Show error to user
-        }
-    }
-
-    generateOutletOptions(selectedId) {
-        if (!this.config || !this.config.outlets) return '<option value="0">Outlet 0</option>';
-        
-        return this.config.outlets.map((outlet, index) => {
-            const selected = index === selectedId ? 'selected' : '';
-            const name = outlet.enabled ? outlet.name : `Outlet ${index} (Not Configured)`;
-            return `<option value="${index}" ${selected}>${name}</option>`;
-        }).join('');
-    }
-
-    addOutlet() {
-        const outletsGrid = document.getElementById('outlets-grid');
-        const outletId = this.config.outlets ? this.config.outlets.length : 0;
-        
-        if (outletId >= 8) {
-            alert('Maximum of 8 outlets supported');
-            return;
-        }
-        
-        this.renderOutletConfig(outletId);
-    }
-
-    updateOutletsGrid() {
-        const outletsGrid = document.getElementById('outlets-grid');
-        outletsGrid.innerHTML = '';
-        
-        if (this.config && this.config.outlets) {
-            this.config.outlets.forEach((outlet, index) => {
-                if (outlet.enabled || outlet.deviceMac) {
-                    this.renderOutletConfig(index);
-                }
-            });
-        }
-    }
-
-    renderOutletConfig(outletId) {
-        const outletsGrid = document.getElementById('outlets-grid');
-        
-        const outletCard = document.createElement('div');
-        outletCard.className = 'outlet-config';
-        outletCard.dataset.outletId = outletId;
-        
-        const outlet = this.config.outlets[outletId] || {
-            name: `Outlet ${outletId}`,
-            deviceMac: '',
-            deviceModel: 'H5083',
-            enabled: false
-        };
-        
-        outletCard.innerHTML = `
-            <div class="outlet-header">
-                <h5>Outlet ${outletId}</h5>
-                <label class="outlet-enabled">
-                    <input type="checkbox" ${outlet.enabled ? 'checked' : ''}> Enabled
-                </label>
-            </div>
-            <div class="outlet-controls">
-                <div class="form-group">
-                    <label>Name:</label>
-                    <input type="text" class="outlet-name" value="${outlet.name}">
-                </div>
-                <div class="form-group">
-                    <label>Device MAC Address:</label>
-                    <input type="text" class="outlet-mac" value="${outlet.deviceMac}" placeholder="AA:BB:CC:DD:EE:FF">
-                </div>
-                <div class="form-group">
-                    <label>Device Model:</label>
-                    <select class="outlet-model">
-                        <option value="H5083" ${outlet.deviceModel === 'H5083' ? 'selected' : ''}>Govee H5083</option>
-                        <option value="H5001" ${outlet.deviceModel === 'H5001' ? 'selected' : ''}>Govee H5001</option>
-                        <option value="custom" ${outlet.deviceModel === 'custom' ? 'selected' : ''}>Custom</option>
-                    </select>
-                </div>
-                <button class="btn-small remove-outlet">Remove</button>
-            </div>
-        `;
-        
-        // Add event listeners
-        outletCard.querySelector('.outlet-enabled input').addEventListener('change', (e) => {
-            this.updateOutletConfig(outletId, 'enabled', e.target.checked);
-        });
-        
-        outletCard.querySelector('.outlet-name').addEventListener('change', (e) => {
-            this.updateOutletConfig(outletId, 'name', e.target.value);
-        });
-        
-        outletCard.querySelector('.outlet-mac').addEventListener('change', (e) => {
-            this.updateOutletConfig(outletId, 'deviceMac', e.target.value);
-        });
-        
-        outletCard.querySelector('.outlet-model').addEventListener('change', (e) => {
-            this.updateOutletConfig(outletId, 'deviceModel', e.target.value);
-        });
-        
-        outletCard.querySelector('.remove-outlet').addEventListener('click', () => {
-            this.removeOutlet(outletId);
-        });
-        
-        outletsGrid.appendChild(outletCard);
-    }
-
-    updateOutletConfig(outletId, property, value) {
-        if (!this.config || !this.config.outlets) return;
-        
-        if (!this.config.outlets[outletId]) {
-            this.config.outlets[outletId] = {
-                id: outletId,
-                name: `Outlet ${outletId}`,
-                deviceMac: '',
-                deviceModel: 'H5083',
-                enabled: false
-            };
-        }
-        
-        this.config.outlets[outletId][property] = value;
-        this.saveConfig();
-    }
-
-    removeOutlet(outletId) {
-        const outletCard = document.querySelector(`[data-outlet-id="${outletId}"]`);
-        if (outletCard) {
-            outletCard.remove();
-        }
-        
-        if (this.config && this.config.outlets && this.config.outlets[outletId]) {
-            this.config.outlets[outletId] = {
-                id: outletId,
-                name: `Outlet ${outletId}`,
-                deviceMac: '',
-                deviceModel: 'H5083',
-                enabled: false
-            };
-            this.saveConfig();
-        }
-    }
-
-    async testApiKeys() {
-        const button = document.getElementById('test-api-keys');
-        button.disabled = true;
-        button.textContent = 'Testing...';
-        
-        try {
-            // Test Govee API if key is present
-            if (this.config.apiKeys.govee) {
-                console.log('Testing Govee API key...');
-                // TODO: Implement actual API test
-            }
-            
-            // Test other APIs as needed
-            
-            setTimeout(() => {
-                button.disabled = false;
-                button.textContent = 'Test API Keys';
-                // TODO: Show test results
-            }, 2000);
-            
-        } catch (error) {
-            console.error('API test failed:', error);
-            button.disabled = false;
-            button.textContent = 'Test API Keys';
-        }
-    }
 
     setupDeviceEventListeners() {
         // Listen for device discovery events

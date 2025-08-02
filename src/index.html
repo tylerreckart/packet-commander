@@ -16,11 +16,9 @@
         </header>
 
         <nav class="tabs">
-            <button class="tab-button active" data-tab="buttons">Button Configuration</button>
-            <button class="tab-button" data-tab="devices">Device Manager</button>
-            <button class="tab-button" data-tab="apikeys">API Keys</button>
-            <button class="tab-button" data-tab="network">Network Settings</button>
-            <button class="tab-button" data-tab="modes">Modes</button>
+            <button class="tab-button active" data-tab="buttons">Buttons</button>
+            <button class="tab-button" data-tab="devices">Devices</button>
+            <button class="tab-button" data-tab="network">Network</button>
             <button class="tab-button" data-tab="device">Connection</button>
         </nav>
 
@@ -224,35 +222,6 @@
                 </div>
             </div>
 
-            <!-- API Keys Tab -->
-            <div id="apikeys-tab" class="tab-content">
-                <div class="api-keys-panel">
-                    <h3>API Keys & Configuration</h3>
-                    <p class="panel-description">Store API keys and configuration data that can be referenced by button actions and scripts using <code>apiKeys.keyName</code>.</p>
-                    
-                    <div class="api-keys-section">
-                        <h4>API Keys</h4>
-                        <div class="api-keys-list" id="api-keys-list">
-                            <!-- API keys will be generated here -->
-                        </div>
-                        <button id="add-api-key" class="btn-secondary">Add API Key</button>
-                    </div>
-                    
-                    <div class="custom-config-section">
-                        <h4>Custom Configuration</h4>
-                        <div class="form-group">
-                            <label for="custom-config">JSON Configuration:</label>
-                            <textarea id="custom-config" rows="8" placeholder='{\n  "server_url": "https://api.example.com",\n  "mqtt_broker": "mqtt.example.com",\n  "thresholds": {\n    "temperature": 25.5,\n    "humidity": 60\n  }\n}'></textarea>
-                            <small>Custom JSON data available to scripts as <code>config.custom</code></small>
-                        </div>
-                    </div>
-                    
-                    <div class="api-actions">
-                        <button id="test-api-keys" class="btn-primary">Test API Keys</button>
-                        <button id="save-api-config" class="btn-secondary">Save Configuration</button>
-                    </div>
-                </div>
-            </div>
 
             <!-- Network Settings Tab -->
             <div id="network-tab" class="tab-content">
@@ -290,41 +259,6 @@
                 </div>
             </div>
 
-            <!-- Modes Tab -->
-            <div id="modes-tab" class="tab-content">
-                <div class="modes-panel">
-                    <h3>Built-in Modes</h3>
-                    <div class="mode-option">
-                        <h4>MIDI Controller</h4>
-                        <p>Transform PATCOM into a MIDI note generator for music production</p>
-                        <div class="midi-config">
-                            <div class="form-group">
-                                <label for="midi-channel">MIDI Channel:</label>
-                                <select id="midi-channel">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                    <option value="8">8</option>
-                                    <option value="9">9</option>
-                                    <option value="10">10</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="base-note">Base Note:</label>
-                                <select id="base-note">
-                                    <option value="60">C4 (Middle C)</option>
-                                    <option value="48">C3</option>
-                                    <option value="72">C5</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Device Tab -->
             <div id="device-tab" class="tab-content">
@@ -348,21 +282,28 @@
                     <div class="connection-controls">
                         <button id="connect-device" class="btn-primary">Connect</button>
                         <button id="disconnect-device" class="btn-secondary" disabled>Disconnect</button>
+                        <button id="upload-config" class="btn-success" disabled>Upload Configuration</button>
                     </div>
                     
-                    <h3>Device Information</h3>
                     <div class="device-info">
-                        <div class="info-item">
-                            <span class="label">Status:</span>
-                            <span id="device-status">Disconnected</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Battery:</span>
-                            <span id="battery-level">Unknown</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">WiFi:</span>
-                            <span id="wifi-status">Unknown</span>
+                        <h4>Device Status</h4>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="label">Connection:</span>
+                                <span id="device-status" class="value">Disconnected</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">Battery:</span>
+                                <span id="battery-level" class="value">Unknown</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">WiFi:</span>
+                                <span id="wifi-status" class="value">Unknown</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">Version:</span>
+                                <span id="device-version" class="value">Unknown</span>
+                            </div>
                         </div>
                     </div>
                 </div>

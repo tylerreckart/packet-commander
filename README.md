@@ -1,5 +1,5 @@
 # Packet Commander
-8-button WiFi controller with advanced configuration management, power optimization, and multi-protocol support.
+8-button WiFi controller with advanced configuration management, power optimization, and multi-protocol capabilities through its desktop application.
 
 ![PATCOM](./assets/patcom.png)
 
@@ -8,35 +8,35 @@
 Packet Commander is a versatile IoT controller featuring 8 programmable buttons with LED feedback, comprehensive WiFi connectivity, and intelligent power management. Designed for smart home automation, network testing, and custom IoT applications.
 
 ### Key Features
-- **8 Programmable Buttons**: HTTP, MQTT, OSC, Serial, MIDI, Webhooks, and custom scripts
-- **Smart Power Management**: Auto-sleep, battery monitoring, power-saving modes
-- **Desktop App**: Full-featured Electron configurator with device management
-- **Persistent Storage**: Configuration saved to flash memory
-- **Multi-Protocol Support**: HTTP/HTTPS, WebSocket, UDP, Serial, MIDI, OSC
-- **Network Discovery**: Automatic device detection and configuration sync
+- **8 Programmable Buttons**: Directly supports HTTP and Webhook actions. The desktop application allows configuration for MIDI, OSC, Serial, and custom scripts, which are then transmitted via HTTP or as data for custom firmware handling.
+- **Smart Power Management**: Includes battery monitoring and optimized CPU frequency for power efficiency.
+- **Desktop App**: Full-featured Electron configurator with device management.
+- **Persistent Storage**: Configuration saved to flash memory on the device.
+- **Multi-Protocol Support**: Firmware directly supports HTTP/HTTPS and Webhook.
+- **Network Discovery**: Automatic device detection and configuration synchronization via the desktop application.
 
 ### Hardware Specs
-- **MCU**: Arduino Nano ESP32 (Dual-core, 240MHz)
-- **Inputs**: 8× illuminated tactile buttons (PB86)
-- **Power**: 9V battery → 3.3V regulated (6-8 hour runtime)
-- **Network**: 2.4GHz WiFi 802.11b/g/n
-- **Current**: 80-240mA (power-saving to active modes)
-- **Storage**: 4MB Flash, EEPROM for configuration
-- **Battery Monitor**: Real-time voltage sensing with low-battery alerts
+- **MCU**: Arduino Nano ESP32 (Dual-core, 240MHz).
+- **Inputs**: 8× illuminated tactile buttons (PB86).
+- **Power**: 9V battery → 3.3V regulated (6-8 hour runtime).
+- **Network**: 2.4GHz WiFi 802.11b/g/n.
+- **Current**: 80-240mA.
+- **Storage**: 4MB Flash, EEPROM for configuration.
+- **Battery Monitor**: Real-time voltage sensing with low-battery alerts.
 
 ## Quick Start
 
 ### 1. Hardware Setup
-- Flash the firmware to your Arduino Nano ESP32
-- Connect 9V battery to power input
-- Power LED will indicate system status
+- Flash the firmware to your Arduino Nano ESP32.
+- Connect 9V battery to power input.
+- Power LED will indicate system status.
 
 ### 2. First Boot Configuration
-1. Power on device - it will create "PATCOM-Config" WiFi hotspot
-2. Connect to hotspot (password: `patcom123`)
-3. Open browser to `192.168.4.1`
-4. Configure your WiFi network and device settings
-5. Device will restart and connect to your network
+1. Power on device - it will create "PATCOM-Config" WiFi hotspot.
+2. Connect to hotspot (password: `patcom123`).
+3. Open browser to `192.168.4.1`.
+4. Configure your WiFi network and device settings.
+5. Device will restart and connect to your network.
 
 ### 3. Desktop Configuration App
 ```bash
@@ -78,58 +78,17 @@ npm run dist
 - Select: **Tools → Board → Arduino Nano ESP32**
 - Select your port
 - Open `firmware/patcom.cpp`
-- Click Upload (hold BOOT if upload fails)
-
-## Modern TypeScript Architecture
-
-### Project Structure
-```
-src/
-├── main.ts                    # Main process entry point
-├── types/                     # Shared type definitions
-│   └── index.ts
-├── services/                  # Main process services
-│   ├── SerialService.ts       # Serial communication
-│   ├── ConfigService.ts       # Configuration management
-│   └── DiscoveryService.ts    # Device discovery
-└── renderer/                  # Renderer process
-    ├── index.html
-    ├── styles.css
-    ├── preload.js
-    ├── renderer.ts            # Entry point
-    ├── PatcomApp.ts           # Main application class
-    ├── types/
-    │   └── index.ts
-    └── components/            # Modular UI components
-        ├── BaseComponent.ts
-        ├── ButtonsComponent.ts
-        ├── NetworkComponent.ts
-        ├── DeviceComponent.ts
-        └── DevicesManagerComponent.ts
-```
-
-### Key Improvements
-- **Full TypeScript**: Strict typing with comprehensive type definitions
-- **Modular Services**: Separated business logic into focused services
-- **Component-Based UI**: Self-contained, reusable UI components
-- **Event-Driven Architecture**: Proper event handling with cleanup
-- **Auto-Detection**: Automatically identifies PATCOM devices
-- **Data Transformation**: Proper format conversion between Electron and Arduino
+- Click Upload
 
 ## Configuration Management
 
 ### Button Action Types
 - **HTTP/HTTPS**: Send GET/POST/PUT requests with custom headers and body
 - **Webhook**: Secure webhook calls with device context and secrets
-- **MIDI**: Send MIDI notes/control changes via USB or network
-- **OSC**: Open Sound Control messages for audio/video applications  
-- **Serial**: Send commands to connected devices via UART
-- **Script**: Execute custom JavaScript with access to device APIs
 - **None**: Disable button (LED-only feedback)
 
 ### Device Settings
 - **Network**: WiFi credentials, static IP configuration
-- **Power**: Sleep timeout, battery thresholds, power-saving options
 - **Discovery**: Device name, auto-discovery, config sync settings
 - **API Keys**: Secure storage for service credentials
 
@@ -138,25 +97,6 @@ src/
 - Automatic backup during low battery
 - Configuration hash verification
 - Remote sync with desktop app
-
-## Power Management
-
-### Intelligent Power Saving
-- **Active Mode**: Full-speed operation (240MHz, WiFi active)
-- **Low Power Mode**: Reduced CPU speed (80MHz, WiFi sleep)
-- **Deep Sleep**: Ultra-low power with button wake (< 10µA)
-
-### Battery Monitoring
-- Real-time voltage measurement via ADC
-- Low battery warnings at 6.0V
-- Critical shutdown at 5.5V to prevent damage
-- Estimated runtime display in configurator
-
-### Sleep Behavior
-- Auto-sleep after 5 minutes of inactivity
-- Wake on any button press
-- Periodic wake for heartbeat (30 minutes)
-- Emergency sleep on critical battery
 
 ## Serial Commands (115200 baud)
 - `STATUS` - Device information and battery status
@@ -209,30 +149,6 @@ src/
 }
 ```
 
-### MIDI Controller
-```json
-{
-  "action": "midi",
-  "config": {
-    "note": 60,
-    "velocity": 127,
-    "channel": 1
-  }
-}
-```
-
-### OSC for Audio/Video
-```json
-{
-  "action": "osc",
-  "config": {
-    "host": "192.168.1.100",
-    "port": 8000,
-    "address": "/live/scene/trigger"
-  }
-}
-```
-
 ### Custom Webhook
 ```json
 {
@@ -244,31 +160,11 @@ src/
 }
 ```
 
-## Advanced Features
-
-### Multi-Device Management
-- Discover and manage multiple packet commanders
-- Bulk configuration updates
-- Device status monitoring
-- Configuration versioning and rollback
-
-### Development & Integration
-- RESTful API for external control
-- WebSocket support for real-time updates
-- MQTT integration for IoT platforms
-- Custom script execution environment
-
-### Security
-- WPA2/WPA3 WiFi security
-- HTTPS support with certificate validation
-- Encrypted API key storage
-- Network access control
-
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| Upload fails | Hold BOOT button during upload |
+| Upload fails | Hold RESET button during upload. Short GPIO0 to GND to reset the boot state. |
 | No WiFi connection | Check 2.4GHz network, verify credentials |
 | Short battery life | Normal: 6-8 hours, enable power saving |
 | Device not discovered | Check firewall, ensure same network |
@@ -279,13 +175,6 @@ src/
 ## License
 
 MIT License - Open source hardware and software.
-
-## Development Status
-
-### 🚧 In Development
-- Hardware PCB layout and component placement
-- 3D printed enclosure design
-- Advanced scripting environment
 
 ## Contributing
 

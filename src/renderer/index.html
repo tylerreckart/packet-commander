@@ -3,21 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PATCOM Configuration</title>
+    <title>Packet Commander Configurator</title>
     <link rel="stylesheet" href="../../dist/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div class="app">
-        <header class="header">
-            <div class="flex items-center gap-3">
-                <h1>Packet Commander Configurator</h1>
-            </div>
-            <div class="device-status">
-                <span id="connection-status" class="status-disconnected">Disconnected</span>
+<body class="bg-white text-gray-900">
+    <div class="app min-h-screen">
+        <!-- Custom Title Bar -->
+        <div class="title-bar flex items-center justify-between p-2" id="title-bar"></div>
+
+        <div class="app-content flex-1 flex flex-col">
+            <header class="header p-4">
+            <div class="flex items-center justify-between">
+                <h1 class="material-h2 text-white font-medium">Packet Commander Configurator</h1>
+                <div class="device-status">
+                    <span id="connection-status" class="status-disconnected text-sm">Disconnected</span>
+                </div>
             </div>
         </header>
 
-        <nav class="tabs">
+        <nav class="tabs px-4">
             <button class="tab-button active" data-tab="buttons">
                 Buttons
             </button>
@@ -32,183 +39,179 @@
             </button>
         </nav>
 
-        <main class="content">
+        <main class="content p-6">
             <!-- Button Configuration Tab -->
             <div id="buttons-tab" class="tab-content active">
-                <div class="button-grid">
-                    <div class="button-config" data-button="0">
-                        <div class="button-visual">
-                            <div class="button-circle">0</div>
-                            <div class="button-led"></div>
+                <div class="button-grid grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div class="button-config material-card p-6">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">0</div>
                         </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 0">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
-                        </div>
-                    </div>
-
-                    <div class="button-config" data-button="1">
-                        <div class="button-visual">
-                            <div class="button-circle">1</div>
-                            <div class="button-led"></div>
-                        </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 1">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 0">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
                         </div>
                     </div>
 
-                    <div class="button-config" data-button="2">
-                        <div class="button-visual">
-                            <div class="button-circle">2</div>
-                            <div class="button-led"></div>
+                    <div class="button-config material-card p-6" data-button="1">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">1</div>
                         </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 2">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
-                        </div>
-                    </div>
-
-                    <div class="button-config" data-button="3">
-                        <div class="button-visual">
-                            <div class="button-circle">3</div>
-                            <div class="button-led"></div>
-                        </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 3">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
                         </div>
                     </div>
 
-                    <div class="button-config" data-button="4">
-                        <div class="button-visual">
-                            <div class="button-circle">4</div>
-                            <div class="button-led"></div>
+                    <div class="button-config material-card p-6" data-button="2">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">2</div>
                         </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 4">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
-                        </div>
-                    </div>
-
-                    <div class="button-config" data-button="5">
-                        <div class="button-visual">
-                            <div class="button-circle">5</div>
-                            <div class="button-led"></div>
-                        </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 5">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                    <option value="midi">MIDI Note</option>
+                                    <option value="osc">OSC Message</option>
+                                    <option value="script">Custom Script</option>
+                                    <option value="serial">Serial Command</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
                         </div>
                     </div>
 
-                    <div class="button-config" data-button="6">
-                        <div class="button-visual">
-                            <div class="button-circle">6</div>
-                            <div class="button-led"></div>
+                    <div class="button-config material-card p-6" data-button="3">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">3</div>
                         </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 6">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 3">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
                         </div>
                     </div>
 
-                    <div class="button-config" data-button="7">
-                        <div class="button-visual">
-                            <div class="button-circle">7</div>
-                            <div class="button-led"></div>
+                    <div class="button-config material-card p-6" data-button="4">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">4</div>
                         </div>
-                        <div class="button-controls">
-                            <label>Name:</label>
-                            <input type="text" class="button-name" value="Button 7">
-                            <label>Action:</label>
-                            <select class="button-action">
-                                <option value="none">None</option>
-                                <option value="http">HTTP Request</option>
-                                <option value="webhook">Webhook</option>
-                                <option value="midi">MIDI Note</option>
-                                <option value="osc">OSC Message</option>
-                                <option value="script">Custom Script</option>
-                                <option value="serial">Serial Command</option>
-                            </select>
-                            <div class="action-config"></div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 4">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config material-card p-6" data-button="5">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">5</div>
+                        </div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 5">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config material-card p-6" data-button="6">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">6</div>
+                        </div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 6">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-config material-card p-6" data-button="7">
+                        <div class="button-visual flex items-center justify-center mb-4">
+                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">7</div>
+                        </div>
+                        <div class="button-controls space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <input type="text" class="material-input button-name" value="Button 7">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <select class="material-select button-action">
+                                    <option value="none">None</option>
+                                    <option value="http">HTTP Request</option>
+                                    <option value="webhook">Webhook</option>
+                                </select>
+                            </div>
+                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
                         </div>
                     </div>
                 </div>
@@ -217,16 +220,28 @@
             <!-- Device Manager Tab -->
             <div id="devices-tab" class="tab-content">
                 <div class="device-manager">
-                    <div class="device-controls">
-                        <button id="discover-devices" class="btn-primary">Discover Devices</button>
-                        <button id="sync-all-devices" class="btn-secondary">Sync All</button>
-                        <span id="discovery-status">Ready</span>
+                    <div class="device-controls material-card p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="material-h3 text-gray-800">Device Discovery</h3>
+                            <span id="discovery-status" class="status-pending text-sm font-medium">Ready</span>
+                        </div>
+                        <div class="flex gap-3 flex-wrap">
+                            <button id="discover-devices" class="material-btn material-btn-contained">
+                                Scan Devices
+                            </button>
+                            <button id="sync-all-devices" class="material-btn material-btn-outlined">
+                                Sync All
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="discovered-devices">
-                        <h3>Discovered Devices</h3>
-                        <div id="device-list" class="device-grid">
-                            <div class="no-devices">No devices discovered. Click "Discover Devices" to scan.</div>
+                        <h3 class="material-h3 text-gray-800 mb-4">Discovered Devices</h3>
+                        <div id="device-list" class="device-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="no-devices material-card p-8 text-center text-gray-500 col-span-full">
+                                <p class="text-sm">No devices discovered yet.</p>
+                                <p class="text-xs text-gray-400 mt-1">Click "Scan Devices" to begin discovery.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -235,58 +250,64 @@
 
             <!-- Network Settings Tab -->
             <div id="network-tab" class="tab-content">
-                <div class="settings-panel">
-                    <h3>WiFi Configuration</h3>
-                    <div class="form-group">
-                        <label for="wifi-ssid">Network Name (SSID):</label>
-                        <input type="text" id="wifi-ssid" placeholder="Enter WiFi network name">
+                <div class="settings-panel material-card p-6 max-w-2xl mx-auto">
+                    <h3 class="material-h3 text-gray-800 mb-6 border-b border-gray-300 pb-3">WiFi Configuration</h3>
+                    <div class="form-group mb-4">
+                        <label for="wifi-ssid" class="block text-sm font-medium text-gray-700 mb-2">Network Name (SSID)</label>
+                        <input type="text" id="wifi-ssid" class="material-input" placeholder="Enter WiFi network name">
                     </div>
-                    <div class="form-group">
-                        <label for="wifi-password">Password:</label>
-                        <input type="password" id="wifi-password" placeholder="Enter WiFi password">
+                    <div class="form-group mb-6">
+                        <label for="wifi-password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="wifi-password" class="material-input" placeholder="Enter WiFi password">
                     </div>
                     
-                    <h3>IP Configuration</h3>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="static-ip"> Use Static IP
+                    <h3 class="material-h3 text-gray-800 mb-6 border-b border-gray-300 pb-3">IP Configuration</h3>
+                    <div class="form-group mb-6">
+                        <label class="flex items-center text-gray-700 text-sm font-medium">
+                            <input type="checkbox" id="static-ip" class="material-checkbox mr-3"> Use Static IP
                         </label>
                     </div>
-                    <div id="static-ip-config" class="ip-config" style="display: none;">
+                    <div id="static-ip-config" class="ip-config material-card p-4 space-y-4 bg-gray-50" style="display: none;">
                         <div class="form-group">
-                            <label for="ip-address">IP Address:</label>
-                            <input type="text" id="ip-address" placeholder="192.168.1.100">
+                            <label for="ip-address" class="block text-sm font-medium text-gray-700 mb-2">IP Address</label>
+                            <input type="text" id="ip-address" class="material-input" placeholder="192.168.1.100">
                         </div>
                         <div class="form-group">
-                            <label for="subnet-mask">Subnet Mask:</label>
-                            <input type="text" id="subnet-mask" placeholder="255.255.255.0">
+                            <label for="subnet-mask" class="block text-sm font-medium text-gray-700 mb-2">Subnet Mask</label>
+                            <input type="text" id="subnet-mask" class="material-input" placeholder="255.255.255.0">
                         </div>
                         <div class="form-group">
-                            <label for="gateway">Gateway:</label>
-                            <input type="text" id="gateway" placeholder="192.168.1.1">
+                            <label for="gateway" class="block text-sm font-medium text-gray-700 mb-2">Gateway</label>
+                            <input type="text" id="gateway" class="material-input" placeholder="192.168.1.1">
                         </div>
                     </div>
                     
-                    <div class="network-actions">
-                        <button id="save-network-config" class="btn-primary">Save Configuration</button>
-                        <button id="test-network-config" class="btn-secondary">Test Connection</button>
-                        <button id="upload-network-config" class="btn-success" disabled>Upload to Device</button>
+                    <div class="network-actions flex gap-3 mt-6 mb-6 flex-wrap">
+                        <button id="save-network-config" class="material-btn material-btn-contained">
+                            Save Config
+                        </button>
+                        <button id="test-network-config" class="material-btn material-btn-outlined">
+                            Test Connection
+                        </button>
+                        <button id="upload-network-config" class="material-btn material-btn-success" disabled>
+                            Upload to Device
+                        </button>
                     </div>
                     
-                    <div class="network-status">
-                        <h4>Network Status</h4>
-                        <div class="status-grid">
-                            <div class="status-item">
-                                <span class="label">Configuration:</span>
-                                <span id="network-config-status" class="value">Not Saved</span>
+                    <div class="network-status material-card p-4 bg-gray-50">
+                        <h4 class="text-gray-800 text-sm font-medium mb-4">Network Status</h4>
+                        <div class="status-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">Config</span>
+                                <span id="network-config-status" class="value text-gray-800 text-sm font-medium">Not Saved</span>
                             </div>
-                            <div class="status-item">
-                                <span class="label">Test Status:</span>
-                                <span id="network-test-status" class="value">Not Tested</span>
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">Test</span>
+                                <span id="network-test-status" class="value text-gray-800 text-sm font-medium">Not Tested</span>
                             </div>
-                            <div class="status-item">
-                                <span class="label">Last Updated:</span>
-                                <span id="network-last-updated" class="value">Never</span>
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">Updated</span>
+                                <span id="network-last-updated" class="value text-gray-800 text-sm font-medium">Never</span>
                             </div>
                         </div>
                     </div>
@@ -296,56 +317,67 @@
 
             <!-- Device Tab -->
             <div id="device-tab" class="tab-content">
-                <div class="device-panel">
-                    <h3>Device Connection</h3>
-                    <div class="form-group">
-                        <label for="serial-port">Serial Port:</label>
-                        <div class="port-controls">
-                            <select id="serial-port">
+                <div class="device-panel material-card p-6 max-w-2xl mx-auto">
+                    <h3 class="material-h3 text-gray-800 mb-6 border-b border-gray-300 pb-3">Device Connection</h3>
+                    <div class="form-group mb-4">
+                        <label for="serial-port" class="block text-sm font-medium text-gray-700 mb-2">Serial Port</label>
+                        <div class="port-controls flex gap-2 items-center flex-wrap">
+                            <select id="serial-port" class="material-select flex-1 min-w-0">
                                 <option value="">Select a port...</option>
                             </select>
-                            <button id="refresh-ports">Refresh</button>
-                            <button id="auto-detect" class="btn-primary">Auto-Detect PATCOM</button>
+                            <button id="refresh-ports" class="material-btn material-btn-outlined">
+                                Refresh
+                            </button>
+                            <button id="auto-detect" class="material-btn material-btn-contained">
+                                Auto Detect
+                            </button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="baud-rate">Baud Rate:</label>
-                        <select id="baud-rate">
+                    <div class="form-group mb-6">
+                        <label for="baud-rate" class="block text-sm font-medium text-gray-700 mb-2">Baud Rate</label>
+                        <select id="baud-rate" class="material-select">
                             <option value="9600">9600</option>
                             <option value="57600">57600</option>
                             <option value="115200" selected>115200</option>
                         </select>
                     </div>
-                    <div class="connection-controls">
-                        <button id="connect-device" class="btn-primary">Connect</button>
-                        <button id="disconnect-device" class="btn-secondary" disabled>Disconnect</button>
-                        <button id="upload-config" class="btn-success" disabled>Upload Configuration</button>
+                    <div class="connection-controls flex gap-3 mt-6 flex-wrap mb-8">
+                        <button id="connect-device" class="material-btn material-btn-contained">
+                            Connect
+                        </button>
+                        <button id="disconnect-device" class="material-btn material-btn-outlined" disabled>
+                            Disconnect
+                        </button>
+                        <button id="upload-config" class="material-btn material-btn-success" disabled>
+                            Upload Config
+                        </button>
                     </div>
                     
-                    <div class="device-info">
-                        <h4>Device Status</h4>
-                        <div class="status-grid">
-                            <div class="status-item">
-                                <span class="label">Connection:</span>
-                                <span id="device-status" class="value">Disconnected</span>
+                    <div class="device-info material-card p-4 bg-gray-50">
+                        <h4 class="text-gray-800 text-sm font-medium mb-4">Device Status</h4>
+                        <div class="status-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">Connection</span>
+                                <span id="device-status" class="value text-gray-800 text-sm font-medium">Disconnected</span>
                             </div>
-                            <div class="status-item">
-                                <span class="label">Battery:</span>
-                                <span id="battery-level" class="value">Unknown</span>
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">Battery</span>
+                                <span id="battery-level" class="value text-gray-800 text-sm font-medium">Unknown</span>
                             </div>
-                            <div class="status-item">
-                                <span class="label">WiFi:</span>
-                                <span id="wifi-status" class="value">Unknown</span>
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">WiFi</span>
+                                <span id="wifi-status" class="value text-gray-800 text-sm font-medium">Unknown</span>
                             </div>
-                            <div class="status-item">
-                                <span class="label">Version:</span>
-                                <span id="device-version" class="value">Unknown</span>
+                            <div class="status-item bg-white border border-gray-200 rounded p-3">
+                                <span class="label block text-xs text-gray-500 font-medium uppercase">Version</span>
+                                <span id="device-version" class="value text-gray-800 text-sm font-medium">Unknown</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+        </div> <!-- End app-content -->
     </div>
 
     <script src="../../dist/renderer/app.js"></script>

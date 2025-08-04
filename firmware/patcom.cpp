@@ -148,31 +148,18 @@ void setup() {
   // Setup hardware first to control status LED
   setupPins();
   
-  // Flash status LED to indicate wake/boot
-  for (int i = 0; i < 3; i++) {
-    digitalWrite(STATUS_LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(STATUS_LED_PIN, LOW);
-    delay(100);
-  }
+  // Simple status LED indication
+  digitalWrite(STATUS_LED_PIN, HIGH);
+  delay(200);
+  digitalWrite(STATUS_LED_PIN, LOW);
   
-  // Brief LED initialization test and set initial states
+  // Initialize all LEDs to OFF state
   for (int i = 0; i < 8; i++) {
-    ledStates[i] = false;  // Ensure all LEDs start OFF
-    analogWrite(ledPins[i], 255);  // Full brightness test
-    delay(50);
+    ledStates[i] = false;  // Set initial state
     analogWrite(ledPins[i], 0);    // Turn off
-    delay(10);
   }
   
-  // Final initialization - ensure all LEDs are OFF
-  for (int i = 0; i < 8; i++) {
-    ledStates[i] = false;  // Force OFF state
-    analogWrite(ledPins[i], 0);    // Force OFF
-  }
-  delay(100);  // Allow PWM to settle
-  
-  Serial.println("All LEDs should now be OFF");
+  Serial.println("LEDs initialized");
   
   // Print pin mapping for debugging
   Serial.println("=== PIN MAPPING DEBUG ===");
@@ -605,22 +592,6 @@ void handleButtonPress(int buttonIndex) {
   // Apply the state immediately
   updateLEDs();
   
-  // Brief visual confirmation flash
-  delay(50);
-  if (buttonIndex >= 5) {
-    digitalWrite(ledPins[buttonIndex], HIGH);  // Flash for buttons 5-7
-  } else {
-    analogWrite(ledPins[buttonIndex], 255);   // Full brightness flash for 0-4
-  }
-  delay(100);
-  // Restore the toggled state
-  if (buttonIndex >= 5) {
-    digitalWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? HIGH : LOW);
-  } else {
-    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
-    analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);
-  }
-  
   // Execute configured action
   if (buttonConfigs[buttonIndex].enabled) {
     executeAction(buttonIndex);
@@ -693,25 +664,8 @@ void executeHttpAction(int buttonIndex, const char* actionData) {
   
   if (httpCode > 0) {
     Serial.println("HTTP " + String(method) + " to " + String(url) + " - Response: " + String(httpCode));
-    if (httpCode >= 200 && httpCode < 300) {
-      // Success - brief confirmation flash but keep current LED state
-      int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
-      analogWrite(ledPins[buttonIndex], 255);  // Flash bright
-      delay(50);
-      analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);  // Restore state
-    }
   } else {
     Serial.println("HTTP request failed: " + String(httpCode));
-    // Flash LED to indicate error without changing state
-    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
-    for (int i = 0; i < 3; i++) {
-      analogWrite(ledPins[buttonIndex], 255);  // Error flash
-      delay(100);
-      analogWrite(ledPins[buttonIndex], 0);
-      delay(100);
-    }
-    // Restore original state
-    analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);
   }
   
   http.end();
@@ -763,25 +717,8 @@ void executeWebhookAction(int buttonIndex, const char* actionData) {
   
   if (httpCode > 0) {
     Serial.println("Webhook sent to " + String(url) + " - Response: " + String(httpCode));
-    if (httpCode >= 200 && httpCode < 300) {
-      // Success - brief confirmation flash but keep current LED state
-      int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
-      analogWrite(ledPins[buttonIndex], 255);  // Flash bright
-      delay(50);
-      analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);  // Restore state
-    }
   } else {
     Serial.println("Webhook failed: " + String(httpCode));
-    // Flash LED to indicate error without changing state
-    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
-    for (int i = 0; i < 3; i++) {
-      analogWrite(ledPins[buttonIndex], 255);  // Error flash
-      delay(100);
-      analogWrite(ledPins[buttonIndex], 0);
-      delay(100);
-    }
-    // Restore original state
-    analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);
   }
   
   http.end();
@@ -926,11 +863,16 @@ void handleConfigUpload() {
 }
 
 void handleConfigUpload(String configJson) {
+  Serial.println("=== CONFIG UPLOAD DEBUG ===");
+  Serial.println("Received JSON length: " + String(configJson.length()));
+  Serial.println("JSON content: " + configJson);
+  
   StaticJsonDocument<2048> doc;
   DeserializationError error = deserializeJson(doc, configJson);
   
   if (error) {
     Serial.println("Failed to parse configuration JSON");
+    Serial.println("Parse error: " + String(error.c_str()));
     if (server.client()) {
       server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Invalid JSON\"}");
     } else {
@@ -939,76 +881,171 @@ void handleConfigUpload(String configJson) {
     return;
   }
   
-  // Update device configuration
-  if (doc.containsKey("device")) {
-    if (doc["device"].containsKey("name")) {
-      strcpy(deviceConfig.deviceName, doc["device"]["name"]);
+  Serial.println("JSON parsed successfully");
+  bool networkChanged = false;
+  bool configChanged = false;
+  
+  // Update device configuration (handle both lowercase and uppercase keys)
+  if (doc.containsKey("device") || doc.containsKey("DEVICE")) {
+    Serial.println("Processing device configuration...");
+    JsonObject deviceObj = doc.containsKey("device") ? doc["device"] : doc["DEVICE"];
+    
+    if (deviceObj.containsKey("name") || deviceObj.containsKey("NAME")) {
+      String newName = deviceObj.containsKey("name") ? deviceObj["name"] : deviceObj["NAME"];
+      Serial.println("Updating device name to: " + newName);
+      strcpy(deviceConfig.deviceName, newName.c_str());
+      configChanged = true;
     }
-    if (doc["device"].containsKey("brightness")) {
-      deviceConfig.brightness = doc["device"]["brightness"];
+    if (deviceObj.containsKey("brightness") || deviceObj.containsKey("BRIGHTNESS")) {
+      int newBrightness = deviceObj.containsKey("brightness") ? deviceObj["brightness"] : deviceObj["BRIGHTNESS"];
+      Serial.println("Updating brightness to: " + String(newBrightness));
+      deviceConfig.brightness = newBrightness;
+      configChanged = true;
     }
-    if (doc["device"].containsKey("discoverable")) {
-      deviceConfig.discoverable = doc["device"]["discoverable"];
+    if (deviceObj.containsKey("discoverable") || deviceObj.containsKey("DISCOVERABLE")) {
+      bool newDiscoverable = deviceObj.containsKey("discoverable") ? deviceObj["discoverable"] : deviceObj["DISCOVERABLE"];
+      Serial.println("Updating discoverable to: " + String(newDiscoverable));
+      deviceConfig.discoverable = newDiscoverable;
+      configChanged = true;
     }
+  } else {
+    Serial.println("No device configuration provided - keeping existing settings");
   }
   
-  // Update network configuration
-  if (doc.containsKey("network")) {
-    if (doc["network"].containsKey("ssid")) {
-      strcpy(networkConfig.ssid, doc["network"]["ssid"]);
+  // Update network configuration (handle both lowercase and uppercase keys)
+  if (doc.containsKey("network") || doc.containsKey("NETWORK")) {
+    Serial.println("Processing network configuration...");
+    JsonObject networkObj = doc.containsKey("network") ? doc["network"] : doc["NETWORK"];
+    
+    if (networkObj.containsKey("ssid") || networkObj.containsKey("SSID")) {
+      String newSSID = networkObj.containsKey("ssid") ? networkObj["ssid"] : networkObj["SSID"];
+      Serial.println("Updating SSID to: " + newSSID);
+      strcpy(networkConfig.ssid, newSSID.c_str());
+      networkChanged = true;
+      configChanged = true;
     }
-    if (doc["network"].containsKey("password")) {
-      strcpy(networkConfig.password, doc["network"]["password"]);
+    if (networkObj.containsKey("password") || networkObj.containsKey("PASSWORD")) {
+      String newPassword = networkObj.containsKey("password") ? networkObj["password"] : networkObj["PASSWORD"];
+      Serial.println("Updating WiFi password (length: " + String(newPassword.length()) + ")");
+      strcpy(networkConfig.password, newPassword.c_str());
+      networkChanged = true;
+      configChanged = true;
     }
-    if (doc["network"].containsKey("staticIP")) {
-      networkConfig.staticIP = doc["network"]["staticIP"];
+    if (networkObj.containsKey("staticIP") || networkObj.containsKey("STATICIP")) {
+      bool newStaticIP = networkObj.containsKey("staticIP") ? networkObj["staticIP"] : networkObj["STATICIP"];
+      Serial.println("Updating staticIP to: " + String(newStaticIP));
+      networkConfig.staticIP = newStaticIP;
+      configChanged = true;
     }
-    if (doc["network"].containsKey("ip")) {
-      strcpy(networkConfig.ip, doc["network"]["ip"]);
+    if (networkObj.containsKey("ip") || networkObj.containsKey("IP")) {
+      String newIP = networkObj.containsKey("ip") ? networkObj["ip"] : networkObj["IP"];
+      Serial.println("Updating IP to: " + newIP);
+      strcpy(networkConfig.ip, newIP.c_str());
+      configChanged = true;
     }
-    if (doc["network"].containsKey("subnet")) {
-      strcpy(networkConfig.subnet, doc["network"]["subnet"]);
+    if (networkObj.containsKey("subnet") || networkObj.containsKey("SUBNET")) {
+      String newSubnet = networkObj.containsKey("subnet") ? networkObj["subnet"] : networkObj["SUBNET"];
+      Serial.println("Updating subnet to: " + newSubnet);
+      strcpy(networkConfig.subnet, newSubnet.c_str());
+      configChanged = true;
     }
-    if (doc["network"].containsKey("gateway")) {
-      strcpy(networkConfig.gateway, doc["network"]["gateway"]);
+    if (networkObj.containsKey("gateway") || networkObj.containsKey("GATEWAY")) {
+      String newGateway = networkObj.containsKey("gateway") ? networkObj["gateway"] : networkObj["GATEWAY"];
+      Serial.println("Updating gateway to: " + newGateway);
+      strcpy(networkConfig.gateway, newGateway.c_str());
+      configChanged = true;
     }
+  } else {
+    Serial.println("No network configuration provided - keeping existing settings");
   }
   
-  // Update button configurations
-  if (doc.containsKey("buttons")) {
-    JsonArray buttons = doc["buttons"];
+  // Update button configurations (handle both lowercase and uppercase keys)
+  if (doc.containsKey("buttons") || doc.containsKey("BUTTONS")) {
+    Serial.println("Processing button configurations...");
+    JsonArray buttons = doc.containsKey("buttons") ? doc["buttons"] : doc["BUTTONS"];
+    Serial.println("Number of buttons to update: " + String(buttons.size()));
+    
     for (JsonObject button : buttons) {
-      int id = button["id"];
+      int id = button.containsKey("id") ? button["id"] : button["ID"];
       if (id >= 0 && id < 8) {
-        strcpy(buttonConfigs[id].name, button["name"] | ("Button " + String(id)).c_str());
-        buttonConfigs[id].action = (ActionType)(button["action"] | ACTION_NONE);
-        buttonConfigs[id].enabled = button["enabled"] | true;
+        Serial.println("Updating button " + String(id) + ":");
         
-        // Serialize action config back to JSON string
-        if (button.containsKey("config")) {
-          String actionData;
-          serializeJson(button["config"], actionData);
-          strcpy(buttonConfigs[id].actionData, actionData.c_str());
+        if (button.containsKey("name") || button.containsKey("NAME")) {
+          String newName = button.containsKey("name") ? button["name"] : button["NAME"];
+          Serial.println("  Name: " + newName);
+          strcpy(buttonConfigs[id].name, newName.c_str());
+        } else {
+          // Keep existing name if not provided
+          Serial.println("  Name: keeping existing (" + String(buttonConfigs[id].name) + ")");
         }
+        
+        if (button.containsKey("action") || button.containsKey("ACTION")) {
+          int newAction = button.containsKey("action") ? button["action"] : button["ACTION"];
+          Serial.println("  Action: " + String(newAction));
+          buttonConfigs[id].action = (ActionType)newAction;
+        } else {
+          Serial.println("  Action: keeping existing (" + String(buttonConfigs[id].action) + ")");
+        }
+        
+        if (button.containsKey("enabled") || button.containsKey("ENABLED")) {
+          bool newEnabled = button.containsKey("enabled") ? button["enabled"] : button["ENABLED"];
+          Serial.println("  Enabled: " + String(newEnabled));
+          buttonConfigs[id].enabled = newEnabled;
+        } else {
+          Serial.println("  Enabled: keeping existing (" + String(buttonConfigs[id].enabled) + ")");
+        }
+        
+        // Handle action configuration
+        if (button.containsKey("config") || button.containsKey("CONFIG")) {
+          JsonObject configObj = button.containsKey("config") ? button["config"] : button["CONFIG"];
+          String actionData;
+          serializeJson(configObj, actionData);
+          Serial.println("  Config: " + actionData);
+          strcpy(buttonConfigs[id].actionData, actionData.c_str());
+        } else {
+          Serial.println("  Config: keeping existing");
+        }
+        
+        configChanged = true;
+      } else {
+        Serial.println("Invalid button ID: " + String(id));
       }
     }
+  } else {
+    Serial.println("No button configuration provided - keeping existing settings");
   }
   
-  // Save configuration
-  saveConfiguration();
+  // Save configuration if anything changed
+  if (configChanged) {
+    Serial.println("Configuration changed - saving to flash...");
+    saveConfiguration();
+    Serial.println("Configuration saved successfully");
+    
+    // Validate and display updated configuration
+    validateConfiguration();
+  } else {
+    Serial.println("No configuration changes detected");
+  }
   
-  Serial.println("Configuration updated successfully");
-  
+  // Send response before potential restart
   if (server.client()) {
     server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Configuration updated\"}");
   } else {
     sendJsonResponse("config_upload", "Configuration updated successfully");
   }
   
-  // Restart if network config changed
-  if (doc.containsKey("network")) {
+  Serial.println("Configuration upload completed");
+  Serial.println("========================");
+  
+  // Restart if network config changed (after sending response)
+  if (networkChanged) {
     Serial.println("Network configuration changed - restarting in 3 seconds...");
-    delay(3000);
+    delay(1000); // Give time for response to be sent
+    Serial.println("Restarting in 2 seconds...");
+    delay(1000);
+    Serial.println("Restarting in 1 second...");
+    delay(1000);
+    Serial.println("Restarting now...");
     ESP.restart();
   }
 }
@@ -1022,6 +1059,35 @@ void handleConfigUpload(String configJson) {
 
 void validateConfiguration() {
   bool hasErrors = false;
+  
+  // Display current configuration for verification
+  Serial.println("=== CURRENT CONFIGURATION ===");
+  Serial.println("Device:");
+  Serial.println("  Name: " + String(deviceConfig.deviceName));
+  Serial.println("  Brightness: " + String(deviceConfig.brightness));
+  Serial.println("  Discoverable: " + String(deviceConfig.discoverable));
+  
+  Serial.println("Network:");
+  Serial.println("  SSID: " + String(networkConfig.ssid));
+  Serial.println("  Password: " + String(strlen(networkConfig.password) > 0 ? "***SET***" : "***EMPTY***"));
+  Serial.println("  Static IP: " + String(networkConfig.staticIP));
+  if (networkConfig.staticIP) {
+    Serial.println("  IP: " + String(networkConfig.ip));
+    Serial.println("  Subnet: " + String(networkConfig.subnet));
+    Serial.println("  Gateway: " + String(networkConfig.gateway));
+  }
+  
+  Serial.println("Buttons:");
+  for (int i = 0; i < 8; i++) {
+    Serial.println("  Button " + String(i) + ":");
+    Serial.println("    Name: " + String(buttonConfigs[i].name));
+    Serial.println("    Action: " + String(buttonConfigs[i].action));
+    Serial.println("    Enabled: " + String(buttonConfigs[i].enabled));
+    if (strlen(buttonConfigs[i].actionData) > 2) { // More than just "{}"
+      Serial.println("    Config: " + String(buttonConfigs[i].actionData));
+    }
+  }
+  Serial.println("=============================");
   
   // Validate network settings
   if (networkConfig.staticIP) {
@@ -1051,17 +1117,6 @@ void validateConfiguration() {
   
   if (hasErrors) {
     Serial.println("Configuration validation failed - some features may not work");
-    // Flash all LEDs as warning
-    for (int j = 0; j < 3; j++) {
-      for (int i = 0; i < 8; i++) {
-        analogWrite(ledPins[i], 255);
-      }
-      delay(200);
-      for (int i = 0; i < 8; i++) {
-        analogWrite(ledPins[i], 0);
-      }
-      delay(200);
-    }
   } else {
     Serial.println("Configuration validation passed");
   }

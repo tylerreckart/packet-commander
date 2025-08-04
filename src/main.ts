@@ -62,7 +62,8 @@ class PatcomApp {
       },
       icon: path.join(__dirname, '../assets/patcom.png'),
       show: false, // Don't show until ready
-      titleBarStyle: 'default',
+      frame: false,
+      titleBarStyle: 'hidden'
     });
 
     // Load the app
@@ -205,15 +206,28 @@ class PatcomApp {
 
     // Device handlers
     ipcMain.handle('get-serial-ports', async () => {
-      return await this.serialService.getSerialPorts();
+      console.log('[MAIN] IPC: get-serial-ports called');
+      try {
+        const ports = await this.serialService.getSerialPorts();
+        console.log('[MAIN] IPC: get-serial-ports returning:', ports);
+        return ports;
+      } catch (error) {
+        console.error('[MAIN] IPC: get-serial-ports error:', error);
+        return [];
+      }
     });
 
     ipcMain.handle('connect-device', async (_event, port, baudRate) => {
+      console.log('[MAIN] IPC: connect-device called with:', { port, baudRate });
       try {
         const result = await this.serialService.connectDevice(port, baudRate);
+        console.log('[MAIN] IPC: connect-device result:', result);
         return { success: result.success, message: result.message };
       } catch (error) {
-        return { success: false, message: (error as Error).message };
+        console.error('[MAIN] IPC: connect-device error:', error);
+        const errorResult = { success: false, message: (error as Error).message };
+        console.log('[MAIN] IPC: connect-device returning error result:', errorResult);
+        return errorResult;
       }
     });
 
@@ -222,17 +236,43 @@ class PatcomApp {
     });
 
     ipcMain.handle('upload-config', async () => {
+      console.log('[MAIN] IPC: upload-config called');
       try {
+        console.log('[MAIN] Getting config from ConfigService...');
         const config = this.configService.getConfig();
-        await this.serialService.uploadConfig(config);
+        console.log('[MAIN] Config retrieved:', config);
+        console.log('[MAIN] Config type:', typeof config);
+        console.log('[MAIN] Config keys:', config ? Object.keys(config) : 'null/undefined');
+        
+        console.log('[MAIN] Calling SerialService.uploadConfig()...');
+        const result = await this.serialService.uploadConfig(config);
+        console.log('[MAIN] SerialService.uploadConfig() result:', result);
+        
+        console.log('[MAIN] Upload successful, returning success response');
         return { success: true, message: 'Configuration uploaded successfully' };
       } catch (error) {
-        return { success: false, message: (error as Error).message };
+        console.error('[MAIN] Upload error:', error);
+        console.error('[MAIN] Error details:', {
+          name: (error as Error).name,
+          message: (error as Error).message,
+          stack: (error as Error).stack
+        });
+        const errorResult = { success: false, message: (error as Error).message };
+        console.log('[MAIN] Returning error result:', errorResult);
+        return errorResult;
       }
     });
 
     ipcMain.handle('auto-detect-patcom', async () => {
-      return await this.serialService.autoDetectPATCOM();
+      console.log('[MAIN] IPC: auto-detect-patcom called');
+      try {
+        const result = await this.serialService.autoDetectPATCOM();
+        console.log('[MAIN] IPC: auto-detect-patcom result:', result);
+        return result;
+      } catch (error) {
+        console.error('[MAIN] IPC: auto-detect-patcom error:', error);
+        return null;
+      }
     });
 
     ipcMain.handle('get-device-status', async () => {
@@ -276,6 +316,27 @@ class PatcomApp {
 
     ipcMain.handle('toggle-dev-tools', () => {
       this.mainWindow?.webContents.toggleDevTools();
+    });
+
+    // Window control handlers
+    ipcMain.handle('window-minimize', () => {
+      this.mainWindow?.minimize();
+    });
+
+    ipcMain.handle('window-maximize', () => {
+      if (this.mainWindow?.isMaximized()) {
+        this.mainWindow.unmaximize();
+      } else {
+        this.mainWindow?.maximize();
+      }
+    });
+
+    ipcMain.handle('window-close', () => {
+      this.mainWindow?.close();
+    });
+
+    ipcMain.handle('window-is-maximized', () => {
+      return this.mainWindow?.isMaximized() || false;
     });
 
     // Set up service event forwarding

@@ -43,7 +43,16 @@ export class ConfigService {
   }
 
   getConfig(): ConfigData {
-    return { ...this.configData };
+    console.log('[CONFIG-SERVICE] getConfig() called');
+    console.log('[CONFIG-SERVICE] Current configData:', this.configData);
+    console.log('[CONFIG-SERVICE] ConfigData keys:', Object.keys(this.configData));
+    console.log('[CONFIG-SERVICE] Network section:', this.configData.network);
+    console.log('[CONFIG-SERVICE] Device section:', this.configData.device);
+    console.log('[CONFIG-SERVICE] Buttons section length:', this.configData.buttons.length);
+    
+    const configCopy = { ...this.configData };
+    console.log('[CONFIG-SERVICE] Returning config copy:', configCopy);
+    return configCopy;
   }
 
   updateConfig(newConfig: Partial<ConfigData>): ConfigData {

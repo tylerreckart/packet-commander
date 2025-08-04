@@ -1,50 +1,32 @@
 /*
- * PATCOM - Universal Programmable Button Matrix Controller
+ * Packet Commander - Universal Programmable Button Matrix Controller
  */
-
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
-#include <SPIFFS.h>
 #include <WebServer.h>
-#include <ESPmDNS.h>
-#include <AsyncUDP.h>
 
 // Configuration constants
 const char* DEVICE_NAME = "PATCOM";
 const char* VERSION = "2.1.0";
 const int CONFIG_SIZE = 8192;
-const unsigned long HEARTBEAT_INTERVAL = 5000;
-const unsigned long BUTTON_DEBOUNCE = 200;
+// Heartbeat removed for simplification
+const unsigned long BUTTON_DEBOUNCE = 50;   // Reduced for better responsiveness
+const unsigned long BUTTON_HOLD_TIME = 100; // Minimum hold time for reliable detection
 const unsigned long STATUS_LED_BLINK = 500;
-const int DISCOVERY_PORT = 12345;
-const int CONFIG_PORT = 12346;
-
-// Power management constants
-const unsigned long SLEEP_TIMEOUT = 300000;  // 5 minutes of inactivity before sleep
-const unsigned long LOW_BATTERY_THRESHOLD = 6000;  // 6.0V threshold for low battery
-const unsigned long CRITICAL_BATTERY_THRESHOLD = 5500;  // 5.5V critical battery
-const unsigned long POWER_CHECK_INTERVAL = 30000;  // Check power every 30 seconds
 
 // Pin assignments
 const int buttonPins[8] = {2, 3, 4, 5, 6, 7, 8, 9};
 const int ledPins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
-const int BATTERY_PIN = A8;
+const int BATTERY_PIN = 17;
 const int STATUS_LED_PIN = 13;
 
 // Action types
 enum ActionType {
   ACTION_NONE = 0,
   ACTION_HTTP = 1,
-  ACTION_SERIAL = 2,
-  ACTION_MIDI = 3,
-  ACTION_SCRIPT = 4,
-  ACTION_OSC = 5,
-  ACTION_WEBHOOK = 6,
-  ACTION_OUTLET_TOGGLE = 7,
-  ACTION_OUTLET_ON = 8,
-  ACTION_OUTLET_OFF = 9
+  ACTION_WEBHOOK = 2
 };
 
 // Device types for multi-device support
@@ -80,20 +62,10 @@ struct DeviceConfig {
   DeviceType deviceType;
   int brightness;
   bool discoverable;
-  int heartbeatInterval;
   char firmwareVersion[16];
   bool autoSync;
   char configServerUrl[128];
 };
-
-// API Keys configuration structure (universal key-value storage)
-struct ApiKeyEntry {
-  char name[32];
-  char value[128];
-  bool active;
-};
-
-const int MAX_API_KEYS = 16;
 
 // API Keys configuration structure (universal key-value storage)
 struct ApiKeyEntry {
@@ -109,32 +81,25 @@ ButtonConfig buttonConfigs[8];
 NetworkConfig networkConfig;
 DeviceConfig deviceConfig;
 ApiKeyEntry apiKeys[MAX_API_KEYS];
-String customConfig = "{}";
 Preferences preferences;
 WebServer server(80);
-AsyncUDP udpDiscovery;
-AsyncUDP udpConfig;
-bool configServerMode = false;
-String lastConfigHash = "";
 
 // State tracking
-bool buttonStates[8] = {false};
+bool buttonStates[8] = {true, true, true, true, true, true, true, true};  // Start as released (HIGH)
+bool buttonPressed[8] = {false, false, false, false, false, false, false, false}; // Track if button is currently pressed
+unsigned long buttonPressStart[8] = {0}; // When button press started
 bool ledStates[8] = {false};
 unsigned long lastButtonPress[8] = {0};
-unsigned long lastHeartbeat = 0;
-unsigned long lastBatteryCheck = 0;
 unsigned long lastStatusBlink = 0;
 bool statusLedState = false;
-float batteryVoltage = 9.0;
+float batteryVoltage = 3.3;  // 3.3V power supply
 bool wifiConnected = false;
 bool configMode = false;
+bool pinsStabilized = false;  // Flag to prevent early button detection
 
-// Power management state
-unsigned long lastActivity = 0;
-unsigned long lastPowerCheck = 0;
-bool lowPowerMode = false;
-bool criticalBattery = false;
-RTC_DATA_ATTR int bootCount = 0;
+// Power monitoring state (sleep management removed)
+bool criticalBattery = false;  // Keep name for compatibility but it's really critical power
+int bootCount = 0;  // Removed RTC_DATA_ATTR since no sleep
 
 // Status LED states
 enum StatusLedMode {
@@ -152,37 +117,20 @@ void loadConfiguration();
 void saveConfiguration();
 void connectWiFi();
 void setupWebServer();
-void setupDiscoveryService();
-void setupConfigService();
 void handleButtonPress(int buttonIndex);
 void executeAction(int buttonIndex);
 void executeHttpAction(int buttonIndex, const char* actionData);
-void executeSerialAction(int buttonIndex, const char* actionData);
-void executeMidiAction(int buttonIndex, const char* actionData);
-void executeScriptAction(int buttonIndex, const char* actionData);
-void executeOscAction(int buttonIndex, const char* actionData);
 void executeWebhookAction(int buttonIndex, const char* actionData);
 void updateLEDs();
-void checkBattery();
-void sendHeartbeat();
 void handleSerialCommands();
 void processSerialCommand(String command);
 void sendJsonResponse(const char* type, const char* message, bool success = true);
 void sendDeviceInfo();
 void handleConfigUpload();
 void handleConfigUpload(String configJson);
-void broadcastDiscovery();
-void handleDiscoveryRequest(AsyncUDPPacket packet);
-void handleConfigRequest(AsyncUDPPacket packet);
-void syncConfigWithServer();
-String generateConfigHash();
 void validateConfiguration();
 bool isValidIP(const char* ip);
 bool isValidUrl(const char* url);
-void checkPowerManagement();
-void enterDeepSleep();
-void updateActivity();
-void configurePowerSaving();
 void updateStatusLED();
 void setStatusLED(StatusLedMode mode);
 
@@ -201,37 +149,49 @@ void setup() {
   setupPins();
   
   // Flash status LED to indicate wake/boot
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 3; i++) {
     digitalWrite(STATUS_LED_PIN, HIGH);
     delay(100);
     digitalWrite(STATUS_LED_PIN, LOW);
     delay(100);
   }
   
-  // Print wakeup reason
-  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
-  switch(wakeup_reason) {
-    case ESP_SLEEP_WAKEUP_EXT0:
-      Serial.println("Wakeup caused by button press");
-      break;
-    case ESP_SLEEP_WAKEUP_TIMER:
-      Serial.println("Wakeup caused by timer");
-      break;
-    case ESP_SLEEP_WAKEUP_UNDEFINED:
-    default:
-      Serial.println("Fresh start or reset");
-      break;
+  // Brief LED initialization test and set initial states
+  for (int i = 0; i < 8; i++) {
+    ledStates[i] = false;  // Ensure all LEDs start OFF
+    analogWrite(ledPins[i], 255);  // Full brightness test
+    delay(50);
+    analogWrite(ledPins[i], 0);    // Turn off
+    delay(10);
   }
   
-  // Initialize SPIFFS for configuration storage
-  if (!SPIFFS.begin(true)) {
-    Serial.println("ERROR: SPIFFS Mount Failed");
-    setStatusLED(STATUS_ERROR);
-    delay(2000);
+  // Final initialization - ensure all LEDs are OFF
+  for (int i = 0; i < 8; i++) {
+    ledStates[i] = false;  // Force OFF state
+    analogWrite(ledPins[i], 0);    // Force OFF
   }
+  delay(100);  // Allow PWM to settle
   
-  // Configure power saving features
-  configurePowerSaving();
+  Serial.println("All LEDs should now be OFF");
+  
+  // Print pin mapping for debugging
+  Serial.println("=== PIN MAPPING DEBUG ===");
+  for (int i = 0; i < 8; i++) {
+    Serial.println("Button " + String(i) + ": GPIO " + String(buttonPins[i]) + " -> LED pin " + String(ledPins[i]) + " (A" + String(i) + " = " + String(A0 + i) + ")");
+  }
+  Serial.println("========================");
+  
+  // Enable button checking after LED test is complete
+  pinsStabilized = true;
+  Serial.println("Button detection enabled");
+  
+  // Sleep wakeup detection removed
+  Serial.println("Fresh start - sleep functions disabled");
+  
+  
+  // Optimize CPU frequency for 3.3V operation and power efficiency
+  setCpuFrequencyMhz(80);  // Reduced frequency for power savings
+  Serial.println("Running at optimized frequency for power efficiency");
   
   // Load configuration from flash
   loadConfiguration();
@@ -239,9 +199,8 @@ void setup() {
   // Validate configuration
   validateConfiguration();
   
-  // Initialize activity tracking
-  lastActivity = millis();
-  lastPowerCheck = millis();
+  // Power monitoring initialization
+  Serial.println("Sleep functions disabled - device will stay awake");
   
   // Set status LED to connecting mode before WiFi
   setStatusLED(STATUS_CONNECTING);
@@ -252,27 +211,6 @@ void setup() {
   // Setup web server for configuration
   setupWebServer();
   
-  // Setup discovery and config services
-  setupDiscoveryService();
-  setupConfigService();
-  
-  // Setup mDNS for device discovery
-  if (wifiConnected) {
-    if (MDNS.begin(deviceConfig.deviceName)) {
-      MDNS.addService("patcom", "tcp", 80);
-      MDNS.addService("patcom-discovery", "udp", DISCOVERY_PORT);
-      MDNS.addService("patcom-config", "udp", CONFIG_PORT);
-      MDNS.addServiceTxt("patcom", "tcp", "version", VERSION);
-      MDNS.addServiceTxt("patcom", "tcp", "device_type", String(deviceConfig.deviceType).c_str());
-      MDNS.addServiceTxt("patcom", "tcp", "device_id", deviceConfig.deviceId);
-      Serial.println("mDNS responder started: " + String(deviceConfig.deviceName) + ".local");
-    }
-  }
-  
-  // Start broadcasting discovery if enabled
-  if (deviceConfig.discoverable && wifiConnected) {
-    broadcastDiscovery();
-  }
   
   // Set final status LED state
   if (wifiConnected) {
@@ -282,7 +220,15 @@ void setup() {
   }
   
   Serial.println("Setup complete!");
-  Serial.println("Commands: CONFIG, STATUS, WIFI, BATTERY, HELP");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("Commands: CONFIG, STATUS, WIFI, POWER, BATTERY, HELP, RESET_WIFI");
+  if (configMode) {
+    Serial.println("*** DEVICE IN CONFIG MODE ***");
+    Serial.println("*** Connect to WiFi: PATCOM-Config ***");
+    Serial.println("*** Password: patcom123 ***");
+    Serial.println("*** Open browser to: 192.168.4.1 ***");
+  }
   sendDeviceInfo();
 }
 
@@ -290,33 +236,54 @@ void loop() {
   // Handle web server requests
   server.handleClient();
   
-  // Check button presses
-  for (int i = 0; i < 8; i++) {
-    if (digitalRead(buttonPins[i]) == LOW) {
-      if (millis() - lastButtonPress[i] > BUTTON_DEBOUNCE) {
-        lastButtonPress[i] = millis();
-        updateActivity();  // Record activity for power management
-        handleButtonPress(i);
+  // Check button presses (only after pins are stabilized)
+  if (pinsStabilized) {
+    for (int i = 0; i < 8; i++) {
+      bool currentState = digitalRead(buttonPins[i]);
+      unsigned long currentTime = millis();
+      
+      // Button pressed: transition from HIGH to LOW (with pullup)
+      if (buttonStates[i] == true && currentState == false) {
+        // Start tracking the press
+        if (!buttonPressed[i]) {
+          buttonPressed[i] = true;
+          buttonPressStart[i] = currentTime;
+        }
+      }
+      // Button released: transition from LOW to HIGH  
+      else if (buttonStates[i] == false && currentState == true) {
+        buttonStates[i] = true;  // Update state
+        
+        // If we were tracking a press, check if it was valid
+        if (buttonPressed[i]) {
+          unsigned long pressDuration = currentTime - buttonPressStart[i];
+          if (pressDuration >= BUTTON_HOLD_TIME && 
+              (currentTime - lastButtonPress[i]) > BUTTON_DEBOUNCE) {
+            lastButtonPress[i] = currentTime;
+            handleButtonPress(i);
+          }
+          buttonPressed[i] = false;
+        }
+      }
+      
+      // Update button state based on current reading
+      if (currentState == false && buttonPressed[i]) {
+        // Check if we've held the button long enough
+        unsigned long pressDuration = currentTime - buttonPressStart[i];
+        if (pressDuration >= BUTTON_HOLD_TIME && buttonStates[i] == true &&
+            (currentTime - lastButtonPress[i]) > BUTTON_DEBOUNCE) {
+          buttonStates[i] = false;  // Update state
+          lastButtonPress[i] = currentTime;
+          handleButtonPress(i);
+          buttonPressed[i] = false; // Prevent multiple triggers
+        }
+      }
+      
+      // Reset press tracking if button has been held too long (prevent stuck buttons)
+      if (buttonPressed[i] && (currentTime - buttonPressStart[i]) > 2000) {
+        buttonPressed[i] = false;
       }
     }
-  }
-  
-  // Send periodic heartbeat
-  if (millis() - lastHeartbeat > deviceConfig.heartbeatInterval) {
-    sendHeartbeat();
-    lastHeartbeat = millis();
-  }
-  
-  // Check battery every minute
-  if (millis() - lastBatteryCheck > 60000) {
-    checkBattery();
-    lastBatteryCheck = millis();
-  }
-  
-  // Check power management
-  if (millis() - lastPowerCheck > POWER_CHECK_INTERVAL) {
-    checkPowerManagement();
-    lastPowerCheck = millis();
   }
   
   // Update status LED
@@ -325,44 +292,48 @@ void loop() {
   // Handle serial commands
   handleSerialCommands();
   
-  // Periodic discovery broadcast (every 30 seconds, disabled in low power mode)
-  static unsigned long lastDiscoveryBroadcast = 0;
-  if (deviceConfig.discoverable && wifiConnected && !lowPowerMode && (millis() - lastDiscoveryBroadcast > 30000)) {
-    broadcastDiscovery();
-    lastDiscoveryBroadcast = millis();
-  }
-  
-  // Periodic config sync (every 60 seconds, disabled in low power mode)
-  static unsigned long lastConfigSync = 0;
-  if (deviceConfig.autoSync && wifiConnected && !lowPowerMode && (millis() - lastConfigSync > 60000)) {
-    syncConfigWithServer();
-    lastConfigSync = millis();
-  }
   
   // Update LEDs
   updateLEDs();
   
-  // Variable delay based on power mode
-  if (criticalBattery) {
-    delay(100);  // Minimal delay in critical mode
-  } else if (lowPowerMode) {
-    delay(50);   // Longer delay in low power mode
-  } else {
-    delay(10);   // Normal operation
-  }
+  // Reduced delay for better button responsiveness
+  delay(10);  // Faster polling for reliable button detection
 }
 
 void setupPins() {
-  // Configure buttons with internal pullup
+  Serial.println("Setting up pins...");
+  
+  // Set global PWM frequency and resolution for ESP32
+  analogWriteFrequency(5000);  // 5kHz PWM frequency
+  analogWriteResolution(8);    // 8-bit resolution (0-255)
+  
+  // Configure LED pins first (safe state)  
   for (int i = 0; i < 8; i++) {
-    pinMode(buttonPins[i], INPUT_PULLUP);
     pinMode(ledPins[i], OUTPUT);
-    digitalWrite(ledPins[i], LOW);
+    analogWrite(ledPins[i], 0);  // Set to off initially
+    Serial.println("LED " + String(i) + " pin " + String(ledPins[i]) + " configured");
   }
   
   // Configure other pins
   pinMode(BATTERY_PIN, INPUT);
   pinMode(STATUS_LED_PIN, OUTPUT);
+  digitalWrite(STATUS_LED_PIN, LOW);
+  
+  // Wait for pins to stabilize
+  delay(500);
+  
+  // Configure buttons with internal pullup - LAST
+  for (int i = 0; i < 8; i++) {
+    pinMode(buttonPins[i], INPUT_PULLUP);
+    // Read initial state to stabilize
+    digitalRead(buttonPins[i]);
+    buttonStates[i] = true;  // Assume released (HIGH with pullup)
+    lastButtonPress[i] = millis();  // Initialize timing
+    Serial.println("Button " + String(i) + " pin " + String(buttonPins[i]) + " configured, initial state: " + String(digitalRead(buttonPins[i])));
+  }
+  
+  Serial.println("Pin setup complete - waiting for stabilization...");
+  delay(1000);  // Give pins time to stabilize
 }
 
 void loadConfiguration() {
@@ -374,7 +345,7 @@ void loadConfiguration() {
   deviceConfig.deviceType = (DeviceType)preferences.getInt("deviceType", DEVICE_TYPE_BUTTON_MATRIX);
   deviceConfig.brightness = preferences.getInt("brightness", 255);
   deviceConfig.discoverable = preferences.getBool("discoverable", true);
-  deviceConfig.heartbeatInterval = preferences.getInt("heartbeat", 5000);
+  // heartbeatInterval removed
   strcpy(deviceConfig.firmwareVersion, VERSION);
   deviceConfig.autoSync = preferences.getBool("autoSync", false);
   strcpy(deviceConfig.configServerUrl, preferences.getString("configServer", "").c_str());
@@ -389,13 +360,11 @@ void loadConfiguration() {
   
   for (int i = 0; i < apiKeyCount && i < MAX_API_KEYS; i++) {
     String prefix = "apiKey" + String(i) + "_";
-    strcpy(apiKeys[i].name, preferences.getString(prefix + "name", "").c_str());
-    strcpy(apiKeys[i].value, preferences.getString(prefix + "value", "").c_str());
+    strcpy(apiKeys[i].name, preferences.getString((prefix + "name").c_str(), "").c_str());
+    strcpy(apiKeys[i].value, preferences.getString((prefix + "value").c_str(), "").c_str());
     apiKeys[i].active = strlen(apiKeys[i].name) > 0;
   }
   
-  // Load custom config
-  customConfig = preferences.getString("customConfig", "{}");
   
   // Load network config
   strcpy(networkConfig.ssid, preferences.getString("ssid", "").c_str());
@@ -409,10 +378,10 @@ void loadConfiguration() {
   // Load button configs
   for (int i = 0; i < 8; i++) {
     String prefix = "btn" + String(i) + "_";
-    strcpy(buttonConfigs[i].name, preferences.getString(prefix + "name", "Button " + String(i)).c_str());
-    buttonConfigs[i].action = (ActionType)preferences.getInt(prefix + "action", ACTION_NONE);
-    strcpy(buttonConfigs[i].actionData, preferences.getString(prefix + "data", "{}").c_str());
-    buttonConfigs[i].enabled = preferences.getBool(prefix + "enabled", true);
+    strcpy(buttonConfigs[i].name, preferences.getString((prefix + "name").c_str(), ("Button " + String(i)).c_str()).c_str());
+    buttonConfigs[i].action = (ActionType)preferences.getInt((prefix + "action").c_str(), ACTION_NONE);
+    strcpy(buttonConfigs[i].actionData, preferences.getString((prefix + "data").c_str(), "{}").c_str());
+    buttonConfigs[i].enabled = preferences.getBool((prefix + "enabled").c_str(), true);
   }
   
   preferences.end();
@@ -428,7 +397,7 @@ void saveConfiguration() {
   preferences.putInt("deviceType", deviceConfig.deviceType);
   preferences.putInt("brightness", deviceConfig.brightness);
   preferences.putBool("discoverable", deviceConfig.discoverable);
-  preferences.putInt("heartbeat", deviceConfig.heartbeatInterval);
+  // heartbeat setting removed
   preferences.putBool("autoSync", deviceConfig.autoSync);
   preferences.putString("configServer", deviceConfig.configServerUrl);
   
@@ -437,15 +406,13 @@ void saveConfiguration() {
   for (int i = 0; i < MAX_API_KEYS; i++) {
     if (apiKeys[i].active) {
       String prefix = "apiKey" + String(activeApiKeyCount) + "_";
-      preferences.putString(prefix + "name", apiKeys[i].name);
-      preferences.putString(prefix + "value", apiKeys[i].value);
+      preferences.putString((prefix + "name").c_str(), apiKeys[i].name);
+      preferences.putString((prefix + "value").c_str(), apiKeys[i].value);
       activeApiKeyCount++;
     }
   }
   preferences.putInt("apiKeyCount", activeApiKeyCount);
   
-  // Save custom config
-  preferences.putString("customConfig", customConfig);
   
   // Save network config
   preferences.putString("ssid", networkConfig.ssid);
@@ -459,24 +426,33 @@ void saveConfiguration() {
   // Save button configs
   for (int i = 0; i < 8; i++) {
     String prefix = "btn" + String(i) + "_";
-    preferences.putString(prefix + "name", buttonConfigs[i].name);
-    preferences.putInt(prefix + "action", buttonConfigs[i].action);
-    preferences.putString(prefix + "data", buttonConfigs[i].actionData);
-    preferences.putBool(prefix + "enabled", buttonConfigs[i].enabled);
+    preferences.putString((prefix + "name").c_str(), buttonConfigs[i].name);
+    preferences.putInt((prefix + "action").c_str(), buttonConfigs[i].action);
+    preferences.putString((prefix + "data").c_str(), buttonConfigs[i].actionData);
+    preferences.putBool((prefix + "enabled").c_str(), buttonConfigs[i].enabled);
   }
   
   preferences.end();
   Serial.println("Configuration saved to flash");
-  
-  // Update config hash
-  lastConfigHash = generateConfigHash();
 }
 
 void connectWiFi() {
+  Serial.println("=== WiFi Connection Debug ===");
+  Serial.println("SSID length: " + String(strlen(networkConfig.ssid)));
+  Serial.println("SSID: '" + String(networkConfig.ssid) + "'");
+  
   if (strlen(networkConfig.ssid) == 0) {
     Serial.println("No WiFi credentials - entering config mode");
     configMode = true;
     setStatusLED(STATUS_ERROR);
+    
+    // Start AP mode immediately when no credentials
+    WiFi.mode(WIFI_AP);
+    bool apResult = WiFi.softAP("PATCOM-Config", "patcom123");
+    Serial.println("AP creation result: " + String(apResult ? "SUCCESS" : "FAILED"));
+    Serial.println("AP started: PATCOM-Config");
+    Serial.println("AP IP: " + WiFi.softAPIP().toString());
+    Serial.println("Connect to PATCOM-Config with password: patcom123");
     return;
   }
   
@@ -498,16 +474,10 @@ void connectWiFi() {
   WiFi.begin(networkConfig.ssid, networkConfig.password);
   
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    delay(500);
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(1000);  // Longer delay to reduce power consumption
     Serial.print(".");
     attempts++;
-    
-    // Status LED will automatically blink in CONNECTING mode
-    // Keep button LEDs off during connection
-    for (int i = 0; i < 8; i++) {
-      digitalWrite(ledPins[i], LOW);
-    }
   }
   
   if (WiFi.status() == WL_CONNECTED) {
@@ -524,9 +494,24 @@ void connectWiFi() {
     
     // Start AP mode for configuration
     WiFi.mode(WIFI_AP);
-    WiFi.softAP("PATCOM-Config", "patcom123");
+    delay(100);  // Give time for mode switch
+    bool apResult = WiFi.softAP("PATCOM-Config", "patcom123");
+    Serial.println("AP creation result: " + String(apResult ? "SUCCESS" : "FAILED"));
     Serial.println("AP started: PATCOM-Config");
     Serial.println("AP IP: " + WiFi.softAPIP().toString());
+    Serial.println("Connect to PATCOM-Config with password: patcom123");
+    
+    // Print available networks for debugging
+    Serial.println("Scanning for networks...");
+    int n = WiFi.scanNetworks();
+    if (n == 0) {
+      Serial.println("No networks found");
+    } else {
+      Serial.println(String(n) + " networks found:");
+      for (int i = 0; i < n; ++i) {
+        Serial.println(String(i + 1) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + "dBm)");
+      }
+    }
   }
 }
 
@@ -537,8 +522,8 @@ void setupWebServer() {
     html += "<h1>PATCOM Configuration</h1>";
     html += "<p>Device: " + String(deviceConfig.deviceName) + "</p>";
     html += "<p>Version: " + String(VERSION) + "</p>";
-    html += "<p>WiFi: " + (wifiConnected ? "Connected" : "Disconnected") + "</p>";
-    html += "<p>Battery: " + String(batteryVoltage, 2) + "V</p>";
+    html += "<p>WiFi: " + String(wifiConnected ? "Connected" : "Disconnected") + "</p>";
+    html += "<p>Power: " + String(batteryVoltage, 2) + "V</p>";
     html += "</body></html>";
     server.send(200, "text/html", html);
   });
@@ -577,7 +562,9 @@ void setupWebServer() {
   });
   
   // API endpoint for uploading configuration
-  server.on("/api/config", HTTP_POST, handleConfigUpload);
+  server.on("/api/config", HTTP_POST, []() {
+    handleConfigUpload();
+  });
   
   // API endpoint for button testing
   server.on("/api/test", HTTP_POST, []() {
@@ -601,13 +588,38 @@ void setupWebServer() {
 void handleButtonPress(int buttonIndex) {
   if (buttonIndex < 0 || buttonIndex >= 8) return;
   
-  Serial.println("Button " + String(buttonIndex) + " (" + String(buttonConfigs[buttonIndex].name) + ") pressed");
+  Serial.println("=== BUTTON " + String(buttonIndex) + " PRESSED ===");
+  Serial.println("Button name: " + String(buttonConfigs[buttonIndex].name));
+  Serial.println("Pin: " + String(buttonPins[buttonIndex]) + " -> LED: " + String(ledPins[buttonIndex]));
   
-  // Record activity for power management
-  updateActivity();
-  
-  // Toggle LED for visual feedback
+  // Toggle LED state for visual feedback
   ledStates[buttonIndex] = !ledStates[buttonIndex];
+  
+  // Debug output for buttons 5-7 LED state
+  if (buttonIndex >= 5) {
+    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
+    Serial.println("LED " + String(buttonIndex) + " pin " + String(ledPins[buttonIndex]) + " (A" + String(buttonIndex) + ") new state: " + String(ledStates[buttonIndex]) + " brightness: " + String(brightness));
+    Serial.println("Pin value: " + String(ledPins[buttonIndex]) + " (expected A" + String(buttonIndex) + " = " + String(A0 + buttonIndex) + ")");
+  }
+  
+  // Apply the state immediately
+  updateLEDs();
+  
+  // Brief visual confirmation flash
+  delay(50);
+  if (buttonIndex >= 5) {
+    digitalWrite(ledPins[buttonIndex], HIGH);  // Flash for buttons 5-7
+  } else {
+    analogWrite(ledPins[buttonIndex], 255);   // Full brightness flash for 0-4
+  }
+  delay(100);
+  // Restore the toggled state
+  if (buttonIndex >= 5) {
+    digitalWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? HIGH : LOW);
+  } else {
+    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
+    analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);
+  }
   
   // Execute configured action
   if (buttonConfigs[buttonIndex].enabled) {
@@ -624,6 +636,7 @@ void handleButtonPress(int buttonIndex) {
   String message;
   serializeJson(doc, message);
   Serial.println("EVENT:" + message);
+  Serial.println("========================");
 }
 
 void executeAction(int buttonIndex) {
@@ -633,18 +646,6 @@ void executeAction(int buttonIndex) {
   switch (action) {
     case ACTION_HTTP:
       executeHttpAction(buttonIndex, actionData);
-      break;
-    case ACTION_SERIAL:
-      executeSerialAction(buttonIndex, actionData);
-      break;
-    case ACTION_MIDI:
-      executeMidiAction(buttonIndex, actionData);
-      break;
-    case ACTION_SCRIPT:
-      executeScriptAction(buttonIndex, actionData);
-      break;
-    case ACTION_OSC:
-      executeOscAction(buttonIndex, actionData);
       break;
     case ACTION_WEBHOOK:
       executeWebhookAction(buttonIndex, actionData);
@@ -692,77 +693,33 @@ void executeHttpAction(int buttonIndex, const char* actionData) {
   
   if (httpCode > 0) {
     Serial.println("HTTP " + String(method) + " to " + String(url) + " - Response: " + String(httpCode));
-    if (httpCode == 200) {
-      ledStates[buttonIndex] = true;  // Success - LED on
+    if (httpCode >= 200 && httpCode < 300) {
+      // Success - brief confirmation flash but keep current LED state
+      int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
+      analogWrite(ledPins[buttonIndex], 255);  // Flash bright
+      delay(50);
+      analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);  // Restore state
     }
   } else {
     Serial.println("HTTP request failed: " + String(httpCode));
-    // Flash LED to indicate error
+    // Flash LED to indicate error without changing state
+    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
     for (int i = 0; i < 3; i++) {
-      digitalWrite(ledPins[buttonIndex], HIGH);
+      analogWrite(ledPins[buttonIndex], 255);  // Error flash
       delay(100);
-      digitalWrite(ledPins[buttonIndex], LOW);
+      analogWrite(ledPins[buttonIndex], 0);
       delay(100);
     }
+    // Restore original state
+    analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);
   }
   
   http.end();
 }
 
-void executeSerialAction(int buttonIndex, const char* actionData) {
-  StaticJsonDocument<256> config;
-  deserializeJson(config, actionData);
-  
-  const char* command = config["command"];
-  if (strlen(command) > 0) {
-    Serial.println("SERIAL_CMD:" + String(command));
-  }
-}
 
-void executeMidiAction(int buttonIndex, const char* actionData) {
-  StaticJsonDocument<256> config;
-  deserializeJson(config, actionData);
-  
-  int note = config["note"] | 60;
-  int velocity = config["velocity"] | 127;
-  int channel = config["channel"] | 1;
-  
-  // Send MIDI note on
-  Serial.println("MIDI_NOTE:" + String(channel) + "," + String(note) + "," + String(velocity));
-  
-  // Brief LED flash for MIDI feedback
-  digitalWrite(ledPins[buttonIndex], HIGH);
-  delay(100);
-  digitalWrite(ledPins[buttonIndex], LOW);
-}
 
-void executeScriptAction(int buttonIndex, const char* actionData) {
-  StaticJsonDocument<256> config;
-  deserializeJson(config, actionData);
-  
-  const char* code = config["code"];
-  if (strlen(code) > 0) {
-    Serial.println("SCRIPT:" + String(code));
-  }
-}
 
-void executeOscAction(int buttonIndex, const char* actionData) {
-  StaticJsonDocument<256> config;
-  deserializeJson(config, actionData);
-  
-  const char* address = config["address"];
-  const char* host = config["host"];
-  int port = config["port"] | 8000;
-  
-  if (strlen(address) > 0 && strlen(host) > 0) {
-    Serial.println("OSC:" + String(host) + ":" + String(port) + " " + String(address));
-    
-    // Flash LED for OSC feedback
-    digitalWrite(ledPins[buttonIndex], HIGH);
-    delay(50);
-    digitalWrite(ledPins[buttonIndex], LOW);
-  }
-}
 
 void executeWebhookAction(int buttonIndex, const char* actionData) {
   if (!wifiConnected) {
@@ -807,17 +764,24 @@ void executeWebhookAction(int buttonIndex, const char* actionData) {
   if (httpCode > 0) {
     Serial.println("Webhook sent to " + String(url) + " - Response: " + String(httpCode));
     if (httpCode >= 200 && httpCode < 300) {
-      ledStates[buttonIndex] = true;  // Success - LED on
+      // Success - brief confirmation flash but keep current LED state
+      int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
+      analogWrite(ledPins[buttonIndex], 255);  // Flash bright
+      delay(50);
+      analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);  // Restore state
     }
   } else {
     Serial.println("Webhook failed: " + String(httpCode));
-    // Flash LED to indicate error
+    // Flash LED to indicate error without changing state
+    int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
     for (int i = 0; i < 3; i++) {
-      digitalWrite(ledPins[buttonIndex], HIGH);
+      analogWrite(ledPins[buttonIndex], 255);  // Error flash
       delay(100);
-      digitalWrite(ledPins[buttonIndex], LOW);
+      analogWrite(ledPins[buttonIndex], 0);
       delay(100);
     }
+    // Restore original state
+    analogWrite(ledPins[buttonIndex], ledStates[buttonIndex] ? brightness : 0);
   }
   
   http.end();
@@ -826,41 +790,19 @@ void executeWebhookAction(int buttonIndex, const char* actionData) {
 void updateLEDs() {
   for (int i = 0; i < 8; i++) {
     int brightness = map(deviceConfig.brightness, 0, 255, 0, 255);
-    analogWrite(ledPins[i], ledStates[i] ? brightness : 0);
+    int ledValue = ledStates[i] ? brightness : 0;
+    
+    // For buttons 5-7, try digitalWrite instead of analogWrite as fallback
+    if (i >= 5) {
+      if (ledStates[i]) {
+        digitalWrite(ledPins[i], HIGH);
+      } else {
+        digitalWrite(ledPins[i], LOW);
+      }
+    } else {
+      analogWrite(ledPins[i], ledValue);
+    }
   }
-}
-
-void checkBattery() {
-  int adcValue = analogRead(BATTERY_PIN);
-  batteryVoltage = (adcValue / 4095.0) * 3.3 * 4.03;  // Voltage divider calculation
-  
-  // Convert to millivolts for threshold comparison
-  unsigned long batteryMillivolts = (unsigned long)(batteryVoltage * 1000);
-  
-  if (batteryMillivolts < CRITICAL_BATTERY_THRESHOLD) {
-    Serial.println("BATTERY:CRITICAL:" + String(batteryVoltage, 2));
-    criticalBattery = true;
-  } else if (batteryMillivolts < LOW_BATTERY_THRESHOLD) {
-    Serial.println("BATTERY:LOW:" + String(batteryVoltage, 2));
-    criticalBattery = false;
-  } else {
-    criticalBattery = false;
-  }
-}
-
-void sendHeartbeat() {
-  StaticJsonDocument<256> doc;
-  doc["type"] = "heartbeat";
-  doc["device"] = deviceConfig.deviceName;
-  doc["version"] = VERSION;
-  doc["uptime"] = millis();
-  doc["battery"] = batteryVoltage;
-  doc["wifi"] = wifiConnected;
-  doc["ip"] = wifiConnected ? WiFi.localIP().toString() : "";
-  
-  String message;
-  serializeJson(doc, message);
-  Serial.println("HEARTBEAT:" + message);
 }
 
 void handleSerialCommands() {
@@ -908,9 +850,29 @@ void processSerialCommand(String command) {
     }
   } else if (command == "WIFI") {
     sendJsonResponse("wifi", wifiConnected ? "Connected" : "Disconnected");
-  } else if (command == "BATTERY") {
-    checkBattery();
-    sendJsonResponse("battery", (String(batteryVoltage, 2) + "V").c_str());
+  } else if (command == "POWER" || command == "BATTERY") {
+    sendJsonResponse("power", (String(batteryVoltage, 2) + "V").c_str());
+  } else if (command == "RESET_WIFI") {
+    Serial.println("Clearing WiFi credentials and restarting...");
+    preferences.begin("patcom", false);
+    preferences.putString("ssid", "");
+    preferences.putString("password", "");
+    preferences.end();
+    delay(1000);
+    ESP.restart();
+  } else if (command == "IDENTIFY") {
+    // Send device identification for electron configurator
+    StaticJsonDocument<256> doc;
+    doc["type"] = "device_identification";
+    doc["device_name"] = deviceConfig.deviceName;
+    doc["device_id"] = deviceConfig.deviceId;
+    doc["version"] = VERSION;
+    doc["device_type"] = "PATCOM";
+    doc["connection"] = "USB";
+    
+    String response;
+    serializeJson(doc, response);
+    Serial.println("IDENTIFY:" + response);
   } else if (command == "HELP") {
     Serial.println("=== PATCOM Commands ===");
     Serial.println("STATUS     - Device information");
@@ -918,7 +880,10 @@ void processSerialCommand(String command) {
     Serial.println("SET_CONFIG:<json> - Upload configuration");
     Serial.println("TEST:<n>   - Test button n");
     Serial.println("WIFI       - WiFi status");
-    Serial.println("BATTERY    - Battery voltage");
+    Serial.println("POWER      - Power supply voltage");
+    Serial.println("BATTERY    - Power supply voltage (alias)");
+    Serial.println("IDENTIFY   - Device identification for configurator");
+    Serial.println("RESET_WIFI - Clear WiFi and enter config mode");
     Serial.println("HELP       - This help");
   } else {
     sendJsonResponse("error", "Unknown command", false);
@@ -943,7 +908,7 @@ void sendDeviceInfo() {
   doc["device"] = deviceConfig.deviceName;
   doc["version"] = VERSION;
   doc["uptime"] = millis();
-  doc["battery"] = batteryVoltage;
+  doc["power"] = batteryVoltage;  // Keep 'batteryVoltage' variable name for compatibility
   doc["wifi"]["connected"] = wifiConnected;
   doc["wifi"]["ssid"] = networkConfig.ssid;
   doc["wifi"]["ip"] = wifiConnected ? WiFi.localIP().toString() : "";
@@ -1048,203 +1013,12 @@ void handleConfigUpload(String configJson) {
   }
 }
 
-void setupDiscoveryService() {
-  if (!wifiConnected) return;
-  
-  if (udpDiscovery.listen(DISCOVERY_PORT)) {
-    Serial.println("Discovery service started on port " + String(DISCOVERY_PORT));
-    
-    udpDiscovery.onPacket([](AsyncUDPPacket packet) {
-      handleDiscoveryRequest(packet);
-    });
-  }
-}
 
-void setupConfigService() {
-  if (!wifiConnected) return;
-  
-  if (udpConfig.listen(CONFIG_PORT)) {
-    Serial.println("Config service started on port " + String(CONFIG_PORT));
-    
-    udpConfig.onPacket([](AsyncUDPPacket packet) {
-      handleConfigRequest(packet);
-    });
-  }
-}
 
-void broadcastDiscovery() {
-  if (!wifiConnected || !deviceConfig.discoverable) return;
-  
-  StaticJsonDocument<512> doc;
-  doc["type"] = "device_discovery";
-  doc["device_id"] = deviceConfig.deviceId;
-  doc["device_name"] = deviceConfig.deviceName;
-  doc["device_type"] = deviceConfig.deviceType;
-  doc["version"] = VERSION;
-  doc["ip"] = WiFi.localIP().toString();
-  doc["mac"] = WiFi.macAddress();
-  doc["battery"] = batteryVoltage;
-  doc["uptime"] = millis();
-  doc["config_hash"] = generateConfigHash();
-  
-  String message;
-  serializeJson(doc, message);
-  
-  // Broadcast to subnet
-  IPAddress broadcast = WiFi.localIP();
-  broadcast[3] = 255;
-  udpDiscovery.broadcastTo(message.c_str(), DISCOVERY_PORT, broadcast);
-  
-  Serial.println("Discovery broadcast sent");
-}
 
-void handleDiscoveryRequest(AsyncUDPPacket packet) {
-  String request = packet.readString();
-  
-  StaticJsonDocument<256> requestDoc;
-  deserializeJson(requestDoc, request);
-  
-  if (requestDoc["type"] == "discover_devices") {
-    // Send device info response
-    StaticJsonDocument<512> responseDoc;
-    responseDoc["type"] = "device_response";
-    responseDoc["device_id"] = deviceConfig.deviceId;
-    responseDoc["device_name"] = deviceConfig.deviceName;
-    responseDoc["device_type"] = deviceConfig.deviceType;
-    responseDoc["version"] = VERSION;
-    responseDoc["ip"] = WiFi.localIP().toString();
-    responseDoc["mac"] = WiFi.macAddress();
-    responseDoc["battery"] = batteryVoltage;
-    responseDoc["uptime"] = millis();
-    responseDoc["config_hash"] = generateConfigHash();
-    responseDoc["wifi_rssi"] = WiFi.RSSI();
-    
-    String response;
-    serializeJson(responseDoc, response);
-    
-    packet.printf(response.c_str());
-    Serial.println("Discovery response sent to " + packet.remoteIP().toString());
-  }
-}
 
-void handleConfigRequest(AsyncUDPPacket packet) {
-  String request = packet.readString();
-  
-  StaticJsonDocument<1024> requestDoc;
-  deserializeJson(requestDoc, request);
-  
-  String requestType = requestDoc["type"];
-  
-  if (requestType == "get_config") {
-    // Send current configuration
-    StaticJsonDocument<2048> responseDoc;
-    responseDoc["type"] = "config_response";
-    responseDoc["device_id"] = deviceConfig.deviceId;
-    responseDoc["config_hash"] = generateConfigHash();
-    
-    // Device config
-    responseDoc["device"]["name"] = deviceConfig.deviceName;
-    responseDoc["device"]["type"] = deviceConfig.deviceType;
-    responseDoc["device"]["brightness"] = deviceConfig.brightness;
-    responseDoc["device"]["discoverable"] = deviceConfig.discoverable;
-    responseDoc["device"]["auto_sync"] = deviceConfig.autoSync;
-    
-    // Network config (without password)
-    responseDoc["network"]["ssid"] = networkConfig.ssid;
-    responseDoc["network"]["staticIP"] = networkConfig.staticIP;
-    responseDoc["network"]["ip"] = networkConfig.ip;
-    
-    // Button configs
-    JsonArray buttons = responseDoc.createNestedArray("buttons");
-    for (int i = 0; i < 8; i++) {
-      JsonObject btn = buttons.createNestedObject();
-      btn["id"] = i;
-      btn["name"] = buttonConfigs[i].name;
-      btn["action"] = buttonConfigs[i].action;
-      btn["enabled"] = buttonConfigs[i].enabled;
-      
-      StaticJsonDocument<256> actionDoc;
-      deserializeJson(actionDoc, buttonConfigs[i].actionData);
-      btn["config"] = actionDoc;
-    }
-    
-    String response;
-    serializeJson(responseDoc, response);
-    packet.printf(response.c_str());
-    
-  } else if (requestType == "set_config") {
-    // Handle remote configuration update
-    handleConfigUpload(request);
-    
-    StaticJsonDocument<128> responseDoc;
-    responseDoc["type"] = "config_update_response";
-    responseDoc["success"] = true;
-    responseDoc["message"] = "Configuration updated";
-    responseDoc["config_hash"] = generateConfigHash();
-    
-    String response;
-    serializeJson(responseDoc, response);
-    packet.printf(response.c_str());
-  }
-}
 
-void syncConfigWithServer() {
-  if (!wifiConnected || !deviceConfig.autoSync || strlen(deviceConfig.configServerUrl) == 0) {
-    return;
-  }
-  
-  String currentHash = generateConfigHash();
-  if (currentHash == lastConfigHash) {
-    return; // No changes
-  }
-  
-  HTTPClient http;
-  http.begin(deviceConfig.configServerUrl);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("X-Device-ID", deviceConfig.deviceId);
-  http.addHeader("X-Config-Hash", currentHash);
-  
-  StaticJsonDocument<512> syncDoc;
-  syncDoc["device_id"] = deviceConfig.deviceId;
-  syncDoc["config_hash"] = currentHash;
-  syncDoc["timestamp"] = millis();
-  
-  String syncPayload;
-  serializeJson(syncDoc, syncPayload);
-  
-  int httpCode = http.POST(syncPayload);
-  
-  if (httpCode == 200) {
-    lastConfigHash = currentHash;
-    Serial.println("Config synced with server");
-  } else {
-    Serial.println("Config sync failed: " + String(httpCode));
-  }
-  
-  http.end();
-}
 
-String generateConfigHash() {
-  // Simple hash of configuration for change detection
-  String configStr = "";
-  configStr += deviceConfig.deviceName;
-  configStr += String(deviceConfig.brightness);
-  configStr += networkConfig.ssid;
-  
-  for (int i = 0; i < 8; i++) {
-    configStr += buttonConfigs[i].name;
-    configStr += String(buttonConfigs[i].action);
-    configStr += buttonConfigs[i].actionData;
-  }
-  
-  // Simple hash function
-  uint32_t hash = 0;
-  for (char c : configStr) {
-    hash = hash * 31 + c;
-  }
-  
-  return String(hash, HEX);
-}
 
 void validateConfiguration() {
   bool hasErrors = false;
@@ -1280,11 +1054,11 @@ void validateConfiguration() {
     // Flash all LEDs as warning
     for (int j = 0; j < 3; j++) {
       for (int i = 0; i < 8; i++) {
-        digitalWrite(ledPins[i], HIGH);
+        analogWrite(ledPins[i], 255);
       }
       delay(200);
       for (int i = 0; i < 8; i++) {
-        digitalWrite(ledPins[i], LOW);
+        analogWrite(ledPins[i], 0);
       }
       delay(200);
     }
@@ -1346,84 +1120,13 @@ void removeApiKey(const char* keyName) {
 
 // Power Management Functions
 
-void configurePowerSaving() {
-  // Configure CPU frequency scaling
-  setCpuFrequencyMhz(80);  // Reduce CPU frequency to save power
-  
-  // Configure WiFi power save mode
-  WiFi.setSleep(true);
-  
-  // Configure external wakeup on button press (any button can wake)
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_2, 0);  // Wake on button 0 (GPIO 2)
-  
-  Serial.println("Power saving configured");
-}
+// Power saving configuration removed for testing
 
-void updateActivity() {
-  lastActivity = millis();
-  
-  // Exit low power mode if we were in it
-  if (lowPowerMode) {
-    lowPowerMode = false;
-    setCpuFrequencyMhz(240);  // Return to full speed
-    WiFi.setSleep(false);
-    setStatusLED(STATUS_ACTIVE);
-    Serial.println("Exiting low power mode");
-  }
-}
+// Activity tracking removed for testing
 
-void checkPowerManagement() {
-  unsigned long inactiveTime = millis() - lastActivity;
-  
-  // Check if we should enter low power mode
-  if (!lowPowerMode && inactiveTime > 60000) {  // 1 minute of inactivity
-    lowPowerMode = true;
-    setCpuFrequencyMhz(80);   // Reduce CPU speed
-    WiFi.setSleep(true);      // Enable WiFi sleep
-    setStatusLED(STATUS_LOW_POWER);
-    Serial.println("Entering low power mode");
-  }
-  
-  // Check if we should enter deep sleep
-  if (inactiveTime > SLEEP_TIMEOUT) {
-    Serial.println("No activity for " + String(SLEEP_TIMEOUT / 1000) + " seconds. Entering deep sleep...");
-    enterDeepSleep();
-  }
-  
-  // Force deep sleep if battery is critically low
-  if (criticalBattery) {
-    Serial.println("Critical battery level. Entering deep sleep to preserve power...");
-    enterDeepSleep();
-  }
-}
+// Power management functions removed for testing
 
-void enterDeepSleep() {
-  // Save current state if needed
-  saveConfiguration();
-  
-  // Turn off all LEDs including status LED
-  setStatusLED(STATUS_OFF);
-  for (int i = 0; i < 8; i++) {
-    digitalWrite(ledPins[i], LOW);
-  }
-  
-  // Disconnect WiFi
-  if (wifiConnected) {
-    WiFi.disconnect();
-  }
-  
-  // Configure wake-up sources
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_2, 0);  // Wake on button 0 press
-  
-  // Optional: Wake up periodically to check battery or send heartbeat
-  esp_sleep_enable_timer_wakeup(30 * 60 * 1000000ULL);  // Wake every 30 minutes
-  
-  Serial.println("Entering deep sleep. Press any button to wake up.");
-  Serial.flush();
-  
-  // Enter deep sleep
-  esp_deep_sleep_start();
-}
+// Deep sleep function removed for testing
 
 // Status LED Management Functions
 

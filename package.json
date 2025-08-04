@@ -1,20 +1,38 @@
 {
   "name": "patcom-config",
   "version": "1.0.0",
-  "description": "Packet Commander Configurator",
-  "main": "src/main.js",
+  "description": "Packet Commander Configurator - Modern Electron App",
+  "main": "dist/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
-    "build": "electron-builder",
-    "dist": "electron-builder --publish=never"
+    "start": "npm run build && electron .",
+    "dev": "npm run build && electron . --dev",
+    "build": "npm run clean && tsc && npm run build:css",
+    "build:css": "postcss src/renderer/styles.css -o dist/styles.css",
+    "watch": "tsc --watch & npm run watch:css",
+    "watch:css": "postcss src/renderer/styles.css -o dist/styles.css --watch",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "electron-pack": "electron-builder",
+    "dist": "npm run build && electron-builder --publish=never",
+    "test": "echo \"No tests specified\" && exit 0"
   },
-  "keywords": ["patcom", "button-matrix", "iot", "configuration"],
+  "keywords": ["patcom", "button-matrix", "iot", "configuration", "electron"],
   "author": "PATCOM",
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
+    "electron-builder": "^24.9.1",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "rimraf": "^5.0.0",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "postcss-cli": "^11.0.0"
   },
   "dependencies": {
     "serialport": "^12.0.0",
@@ -24,20 +42,37 @@
     "appId": "com.patcom.config",
     "productName": "Packet Commander Configurator",
     "directories": {
-      "output": "dist"
+      "output": "build"
     },
     "files": [
-      "src/**/*",
+      "dist/**/*",
+      "src/renderer/index.html",
+      "src/renderer/dist.css",
       "assets/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets"
+      }
+    ],
     "mac": {
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "win": {
       "target": "nsis"
     },
     "linux": {
       "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

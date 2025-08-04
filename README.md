@@ -43,11 +43,17 @@ Packet Commander is a versatile IoT controller featuring 8 programmable buttons 
 # Install dependencies
 npm install
 
-# Run the configurator
+# Build all TypeScript
+npm run build
+
+# Run in development mode
+npm run dev
+
+# Run in production mode
 npm start
 
 # Build for distribution
-npm run build
+npm run dist
 ```
 
 ### 4. Device Discovery & Configuration
@@ -73,6 +79,42 @@ npm run build
 - Select your port
 - Open `firmware/patcom.cpp`
 - Click Upload (hold BOOT if upload fails)
+
+## Modern TypeScript Architecture
+
+### Project Structure
+```
+src/
+├── main.ts                    # Main process entry point
+├── types/                     # Shared type definitions
+│   └── index.ts
+├── services/                  # Main process services
+│   ├── SerialService.ts       # Serial communication
+│   ├── ConfigService.ts       # Configuration management
+│   └── DiscoveryService.ts    # Device discovery
+└── renderer/                  # Renderer process
+    ├── index.html
+    ├── styles.css
+    ├── preload.js
+    ├── renderer.ts            # Entry point
+    ├── PatcomApp.ts           # Main application class
+    ├── types/
+    │   └── index.ts
+    └── components/            # Modular UI components
+        ├── BaseComponent.ts
+        ├── ButtonsComponent.ts
+        ├── NetworkComponent.ts
+        ├── DeviceComponent.ts
+        └── DevicesManagerComponent.ts
+```
+
+### Key Improvements
+- **Full TypeScript**: Strict typing with comprehensive type definitions
+- **Modular Services**: Separated business logic into focused services
+- **Component-Based UI**: Self-contained, reusable UI components
+- **Event-Driven Architecture**: Proper event handling with cleanup
+- **Auto-Detection**: Automatically identifies PATCOM devices
+- **Data Transformation**: Proper format conversion between Electron and Arduino
 
 ## Configuration Management
 

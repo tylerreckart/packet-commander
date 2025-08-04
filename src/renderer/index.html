@@ -4,22 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PATCOM Configuration</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../dist/styles.css">
 </head>
 <body>
     <div class="app">
         <header class="header">
-            <h1>Packet Commander Configurator</h1>
+            <div class="flex items-center gap-3">
+                <h1>Packet Commander Configurator</h1>
+            </div>
             <div class="device-status">
                 <span id="connection-status" class="status-disconnected">Disconnected</span>
             </div>
         </header>
 
         <nav class="tabs">
-            <button class="tab-button active" data-tab="buttons">Buttons</button>
-            <button class="tab-button" data-tab="devices">Devices</button>
-            <button class="tab-button" data-tab="network">Network</button>
-            <button class="tab-button" data-tab="device">Connection</button>
+            <button class="tab-button active" data-tab="buttons">
+                Buttons
+            </button>
+            <button class="tab-button" data-tab="devices">
+                Devices
+            </button>
+            <button class="tab-button" data-tab="network">
+                Network
+            </button>
+            <button class="tab-button" data-tab="device">
+                Connection
+            </button>
         </nav>
 
         <main class="content">
@@ -256,6 +266,30 @@
                             <input type="text" id="gateway" placeholder="192.168.1.1">
                         </div>
                     </div>
+                    
+                    <div class="network-actions">
+                        <button id="save-network-config" class="btn-primary">Save Configuration</button>
+                        <button id="test-network-config" class="btn-secondary">Test Connection</button>
+                        <button id="upload-network-config" class="btn-success" disabled>Upload to Device</button>
+                    </div>
+                    
+                    <div class="network-status">
+                        <h4>Network Status</h4>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="label">Configuration:</span>
+                                <span id="network-config-status" class="value">Not Saved</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">Test Status:</span>
+                                <span id="network-test-status" class="value">Not Tested</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">Last Updated:</span>
+                                <span id="network-last-updated" class="value">Never</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -266,10 +300,13 @@
                     <h3>Device Connection</h3>
                     <div class="form-group">
                         <label for="serial-port">Serial Port:</label>
-                        <select id="serial-port">
-                            <option value="">Select a port...</option>
-                        </select>
-                        <button id="refresh-ports">Refresh</button>
+                        <div class="port-controls">
+                            <select id="serial-port">
+                                <option value="">Select a port...</option>
+                            </select>
+                            <button id="refresh-ports">Refresh</button>
+                            <button id="auto-detect" class="btn-primary">Auto-Detect PATCOM</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="baud-rate">Baud Rate:</label>
@@ -311,6 +348,6 @@
         </main>
     </div>
 
-    <script src="renderer.js"></script>
+    <script src="../../dist/renderer/app.js"></script>
 </body>
 </html>

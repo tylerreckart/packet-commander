@@ -1,4 +1,4 @@
-# ![PATCOM Icon](./assets/icons/icon-64.png) Packet Commander
+# Packet Commander
 8-button WiFi controller with advanced configuration management, power optimization, and multi-protocol capabilities through its desktop application.
 
 ![PATCOM](./assets/patcom.png)

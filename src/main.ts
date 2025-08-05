@@ -481,8 +481,8 @@ class PatcomApp {
     await dialog.showMessageBox(this.mainWindow!, {
       type: 'info',
       title: 'About Packet Commander',
-      message: 'Packet Commander',
-      detail: `Version: ${app.getVersion()}\n\nA modern configuration tool for Packet Commander devices.`,
+      message: 'Packet Commander Configurator',
+      detail: `Version: ${app.getVersion()}\n\nA flexible configuration tool for Packet Commander devices.\n\nMade by Electron Dynamics\n\nelectrondynamics.co`,
       buttons: ['OK']
     });
   }

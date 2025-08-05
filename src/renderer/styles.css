@@ -98,16 +98,19 @@
 
   /* Custom Title Bar */
   .title-bar {
-    height: 32px;
-    background-color: var(--grey-50);
+    height: 30px;
+    width: 100%;
+    background-color: var(--background-paper);
+    border-bottom: 1px solid var(--border-color);
     -webkit-app-region: drag;
     user-select: none;
-    position: relative;
+    position: fixed;
     z-index: 1000;
   }
   
   /* Header - Material UI AppBar Style */
   .header {
+    margin-top: 30px;
     background-color: var(--grey-50);
     color: var(--text-primary);
     box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.4), 0px 4px 5px 0px rgba(0,0,0,0.28), 0px 1px 10px 0px rgba(0,0,0,0.24);
@@ -143,7 +146,7 @@
   .tabs {
     background-color: var(--background-paper);
     border-bottom: 1px solid var(--border-color);
-    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.4), 0px 1px 1px 0px rgba(0,0,0,0.28), 0px 1px 3px 0px rgba(0,0,0,0.24);
+    border-top: 1px solid var(--border-color);
   }
 
   .tab-button {
@@ -177,6 +180,7 @@
     flex: 1;
     overflow: auto;
     background-color: var(--background-main);
+    min-height: calc(100vh - 200px);
   }
   
   .tab-content {
@@ -374,28 +378,27 @@
     box-shadow: 0 0 8px rgba(46, 125, 50, 0.5);
   }
 
-  /* Dark Theme Scrollbars */
+  /* Hidden Scrollbars */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 0px;
+    background: transparent;
   }
   
   ::-webkit-scrollbar-track {
-    background-color: var(--background-main);
+    background: transparent;
   }
   
   ::-webkit-scrollbar-thumb {
-    background-color: var(--grey-400);
-    border-radius: 4px;
+    background: transparent;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--grey-500);
+    background: transparent;
   }
   
   /* For Firefox */
   * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--grey-400) var(--background-main);
+    scrollbar-width: none;
   }
 
   /* Utility classes for consistent spacing */
@@ -839,5 +842,19 @@
 
   .material-background {
     background-color: var(--background-main);
+  }
+
+  /* Device Discovery Container Improvements */
+  .device-manager {
+    min-height: calc(100vh - 300px);
+  }
+  
+  .discovered-devices {
+    min-height: 400px;
+  }
+  
+  #device-list {
+    min-height: 350px;
+    overflow-y: auto;
   }
 }

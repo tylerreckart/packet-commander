@@ -1,18 +1,23 @@
-import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron';
-import * as path from 'path';
-import * as fs from 'fs';
-
-// Set app name as early as possible - multiple attempts for macOS
+// Set app name BEFORE any imports to ensure it takes effect
+import { app } from 'electron';
 app.setName('Packet Commander');
 
-// Also try setting app user model id for Windows and app bundle id for macOS
-if (process.platform === 'win32') {
-  app.setAppUserModelId('com.patcom.packet-commander');
-} else if (process.platform === 'darwin') {
-  // Force dock to update by setting app properties
+// Set additional app properties for macOS before other imports
+if (process.platform === 'darwin') {
+  // These environment variables can affect the app name display
   process.env.npm_package_productName = 'Packet Commander';
   process.env.npm_package_name = 'packet-commander';
 }
+
+// Also try setting app user model id for Windows
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.patcom.packet-commander');
+}
+
+// Now import the rest
+import { BrowserWindow, Menu, ipcMain, dialog } from 'electron';
+import * as path from 'path';
+import * as fs from 'fs';
 import { SerialService } from './services/SerialService';
 import { ConfigService } from './services/ConfigService';
 import { DiscoveryService } from './services/DiscoveryService';
@@ -24,10 +29,9 @@ class PatcomApp {
   private discoveryService = new DiscoveryService();
 
   constructor() {
-    // Set the app name for macOS dock and app switcher - must be done before app ready
+    // App name is already set at the top of the file before imports
+    // Just set dock badge to force refresh on macOS if needed
     if (process.platform === 'darwin') {
-      app.setName('Packet Commander');
-      // Also try setting the dock badge to force refresh
       app.dock?.setBadge('');
     }
     
@@ -38,10 +42,8 @@ class PatcomApp {
   private setupApp(): void {
     // Security: Enable secure defaults
     app.whenReady().then(() => {
-      // Set app name and icon early for macOS
+      // Set dock icon for macOS (app name already set at startup)
       if (process.platform === 'darwin') {
-        app.setName('Packet Commander');
-        
         const iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon.icns');
         if (fs.existsSync(iconPath)) {
           try {

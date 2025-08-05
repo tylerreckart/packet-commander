@@ -14,7 +14,8 @@
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "electron-pack": "electron-builder",
-    "dist": "npm run build && electron-builder --publish=never",
+    "dist": "npm run build && npm run clean-xattr && electron-builder --publish=never",
+    "clean-xattr": "find . -name '*.app' -exec xattr -cr {} \\; 2>/dev/null || true",
     "clear-cache": "node clear-cache.js",
     "fresh-start": "npm run clear-cache && npm run dev",
     "test": "echo \"No tests specified\" && exit 0"
@@ -37,8 +38,7 @@
     "postcss-cli": "^11.0.0"
   },
   "dependencies": {
-    "serialport": "^12.0.0",
-    "midi": "^2.0.0"
+    "serialport": "^12.0.0"
   },
   "build": {
     "appId": "com.patcom.config",
@@ -62,8 +62,13 @@
     "mac": {
       "icon": "assets/icons/icon.icns",
       "category": "public.app-category.utilities",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "extendInfo": {
+        "CFBundleDisplayName": "Packet Commander",
+        "CFBundleName": "Packet Commander"
+      }
     },
     "win": {
       "icon": "assets/icons/icon.ico",

@@ -572,50 +572,6 @@ class PatcomApp {
         `;
         break;
         
-      case 'midi':
-        configHTML = `
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">MIDI Channel</label>
-              <select class="material-select text-sm action-midi-channel">
-                ${Array.from({length: 16}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Note</label>
-              <input type="number" class="material-input text-sm action-midi-note" min="0" max="127" value="60" placeholder="60">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Velocity</label>
-              <input type="number" class="material-input text-sm action-midi-velocity" min="0" max="127" value="127" placeholder="127">
-            </div>
-          </div>
-        `;
-        break;
-        
-      case 'osc':
-        configHTML = `
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">OSC Address</label>
-              <input type="text" class="material-input text-sm action-osc-address" placeholder="/button/${buttonIndex}">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Host</label>
-              <input type="text" class="material-input text-sm action-osc-host" value="127.0.0.1" placeholder="127.0.0.1">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Port</label>
-              <input type="number" class="material-input text-sm action-osc-port" value="9000" placeholder="9000">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Arguments (comma-separated)</label>
-              <input type="text" class="material-input text-sm action-osc-args" placeholder="1, pressed">
-            </div>
-          </div>
-        `;
-        break;
-        
       case 'script':
         configHTML = `
           <div class="space-y-3">
@@ -626,21 +582,6 @@ class PatcomApp {
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Arguments</label>
               <input type="text" class="material-input text-sm action-script-args" placeholder="arg1 arg2 arg3">
-            </div>
-          </div>
-        `;
-        break;
-        
-      case 'serial':
-        configHTML = `
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Command</label>
-              <input type="text" class="material-input text-sm action-serial-command" placeholder="LED_ON">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Parameters</label>
-              <input type="text" class="material-input text-sm action-serial-params" placeholder="255,0,0">
             </div>
           </div>
         `;

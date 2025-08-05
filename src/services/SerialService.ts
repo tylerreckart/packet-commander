@@ -404,10 +404,7 @@ export class SerialService extends EventEmitter {
       'none': 0,      // ACTION_NONE
       'http': 1,      // ACTION_HTTP
       'webhook': 2,   // ACTION_WEBHOOK
-      'midi': 1,      // Treat as HTTP for now
-      'osc': 1,       // Treat as HTTP for now
       'script': 0,    // Treat as none for now
-      'serial': 0     // Treat as none for now
     };
     const mappedValue = actionMap[electronAction] || 0;
     console.log('[ACTION-MAP] Mapped to Arduino action type:', mappedValue);

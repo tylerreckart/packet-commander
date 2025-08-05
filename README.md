@@ -8,7 +8,7 @@
 Packet Commander is a versatile IoT controller featuring 8 programmable buttons with LED feedback, comprehensive WiFi connectivity, and intelligent power management. Designed for smart home automation, network testing, and custom IoT applications.
 
 ### Key Features
-- **8 Programmable Buttons**: Directly supports HTTP and Webhook actions. The desktop application allows configuration for MIDI, OSC, Serial, and custom scripts, which are then transmitted via HTTP or as data for custom firmware handling.
+- **8 Programmable Buttons**: Directly supports HTTP and Webhook actions.
 - **Smart Power Management**: Includes battery monitoring and optimized CPU frequency for power efficiency.
 - **Desktop App**: Full-featured Electron configurator with device management.
 - **Persistent Storage**: Configuration saved to flash memory on the device.
@@ -61,7 +61,7 @@ npm run dist
 
 ### 4. Device Discovery & Configuration
 - Click "Discover Devices" to find controllers on your network
-- Configure button actions: HTTP requests, MIDI, OSC, webhooks, custom scripts
+- Configure button actions: HTTP requests, webhooks.
 - Upload configuration to device
 - Test buttons and monitor activity
 

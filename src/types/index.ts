@@ -35,7 +35,7 @@ export interface ConfigData {
   customConfig: string;
 }
 
-export type ActionType = 'none' | 'http' | 'webhook' | 'midi' | 'osc' | 'script' | 'serial';
+export type ActionType = 'none' | 'http' | 'webhook' | 'script';
 
 export interface ActionConfig {
   url?: string;

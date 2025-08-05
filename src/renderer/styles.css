@@ -2,50 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Material UI Color Variables */
+/* Dark Mode Color Variables */
 :root {
-  --primary-main: #1976d2;
-  --primary-light: #42a5f5;
-  --primary-dark: #1565c0;
-  --secondary-main: #dc004e;
-  --secondary-light: #ff5983;
-  --secondary-dark: #9a0036;
-  --success-main: #07900d;
-  --success-light: #15bc1b;
-  --warning-main: #ed6c02;
-  --warning-light: #ff9800;
-  --error-main: #d32f2f;
-  --error-light: #f44336;
-  --info-main: #0288d1;
-  --info-light: #03a9f4;
-  --grey-50: #fafafa;
-  --grey-100: #f5f5f5;
-  --grey-200: #eeeeee;
-  --grey-300: #e0e0e0;
-  --grey-400: #bdbdbd;
-  --grey-500: #9e9e9e;
-  --grey-600: #757575;
-  --grey-700: #616161;
-  --grey-800: #424242;
-  --grey-900: #212121;
+  --primary-main: #6AC057;
+  --primary-light: #a5d6a7;
+  --primary-dark: #4ea63a;
+  --secondary-main: #da2739;
+  --secondary-light: #ffc1cc;
+  --secondary-dark: #f06292;
+  --success-main: #6AC057;
+  --success-light: #a5d6a7;
+  --warning-main: #ffb74d;
+  --warning-light: #ffcc02;
+  --error-main: #f44336;
+  --error-light: #ef5350;
+  --info-main: #4fc3f7;
+  --info-light: #81d4fa;
+  
+  /* Dark theme greys */
+  --grey-50: #1a1a1a;
+  --grey-100: #2d2d2d;
+  --grey-200: #3d3d3d;
+  --grey-300: #4d4d4d;
+  --grey-400: #6d6d6d;
+  --grey-500: #8d8d8d;
+  --grey-600: #adadad;
+  --grey-700: #cdcdcd;
+  --grey-800: #e0e0e0;
+  --grey-900: #f5f5f5;
+  
+  /* Dark theme backgrounds and surfaces */
+  --background-main: #121212;
+  --background-paper: #1e1e1e;
+  --background-surface: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-disabled: #666666;
+  --border-color: #404040;
 }
 
 @layer base {
   * {
-    @apply border-gray-300;
+    border-color: var(--border-color);
   }
   
   body {
-    @apply bg-white text-gray-900 antialiased;
+    background-color: var(--background-main);
+    color: var(--text-primary);
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     font-weight: 400;
     line-height: 1.5;
     letter-spacing: 0.00938em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   html, body, #root, .app {
-    @apply h-full;
-    background-color: #fafafa;
+    height: 100%;
+    background-color: var(--background-main);
   }
 }
 
@@ -70,18 +84,22 @@
 
   /* App Layout */
   .app {
-    @apply flex flex-col h-screen;
-    background-color: #fafafa;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--background-main);
   }
 
   .app-content {
-    @apply flex flex-col flex-1;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
 
   /* Custom Title Bar */
   .title-bar {
     height: 32px;
-    background-color: var(--primary-main);
+    background-color: var(--grey-50);
     -webkit-app-region: drag;
     user-select: none;
     position: relative;
@@ -90,9 +108,9 @@
   
   /* Header - Material UI AppBar Style */
   .header {
-    background-color: var(--primary-main);
-    color: white;
-    box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12);
+    background-color: var(--grey-50);
+    color: var(--text-primary);
+    box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.4), 0px 4px 5px 0px rgba(0,0,0,0.28), 0px 1px 10px 0px rgba(0,0,0,0.24);
   }
 
   /* Status Indicators */
@@ -102,7 +120,7 @@
   }
   
   .status-disconnected {
-    color: var(--secondary-light);
+    color: var(--secondary-main);
     font-weight: 500;
   }
   
@@ -118,25 +136,29 @@
   }
 
   .status-disconnected::before {
-    background-color: var(--grey-500);
+    background-color: var(--secondary-main);
   }
 
   /* Navigation Tabs - Material UI Tabs Style */
   .tabs {
-    background-color: white;
-    border-bottom: 1px solid var(--grey-300);
-    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+    background-color: var(--background-paper);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.4), 0px 1px 1px 0px rgba(0,0,0,0.28), 0px 1px 3px 0px rgba(0,0,0,0.24);
   }
 
   .tab-button {
-    @apply px-6 py-3 text-sm font-medium transition-all duration-200;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
     background-color: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    color: var(--grey-700);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.02857em;
     min-height: 48px;
+    cursor: pointer;
   }
 
   .tab-button.active {
@@ -147,78 +169,90 @@
 
   .tab-button:hover {
     color: var(--primary-main);
-    background-color: rgba(25, 118, 210, 0.04);
+    background-color: rgba(167, 167, 167, 0.08);
   }
 
   /* Content Area */
   .content {
-    @apply flex-1 overflow-auto;
-    background-color: #fafafa;
+    flex: 1;
+    overflow: auto;
+    background-color: var(--background-main);
   }
   
   .tab-content {
-    @apply hidden;
+    display: none;
   }
   
   .tab-content.active {
-    @apply block;
+    display: block;
   }
 
   /* Material UI Cards */
   .material-card {
-    background-color: white;
+    background-color: var(--background-paper);
     border-radius: 8px;
-    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.15), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+    border: 1px solid var(--border-color);
+    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.3), 0px 1px 1px 0px rgba(0,0,0,0.28), 0px 1px 3px 0px rgba(0,0,0,0.24);
     transition: box-shadow 0.3s ease;
   }
 
   .material-card:hover {
-    box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2), 0px 3px 4px 0px rgba(0,0,0,0.14), 0px 1px 8px 0px rgba(0,0,0,0.12);
+    box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.4), 0px 3px 4px 0px rgba(0,0,0,0.28), 0px 1px 8px 0px rgba(0,0,0,0.24);
   }
 
   /* Form Elements - Material UI Style */
   .material-input {
-    @apply w-full px-3 py-2;
-    background-color: white;
-    border: 1px solid var(--grey-400);
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--background-surface);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     font-size: 16px;
     line-height: 1.5;
+    color: var(--text-primary);
   }
 
   .material-input:focus {
     border-color: var(--primary-main);
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    box-shadow: 0 0 0 2px rgba(144, 202, 249, 0.3);
   }
 
   .material-input::placeholder {
-    color: var(--grey-500);
+    color: var(--text-disabled);
   }
 
   .material-select {
-    @apply w-full px-3 py-2;
-    background-color: white;
-    border: 1px solid var(--grey-400);
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--background-surface);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     font-size: 16px;
     cursor: pointer;
+    color: var(--text-primary);
   }
 
   .material-select:focus {
     border-color: var(--primary-main);
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    box-shadow: 0 0 0 2px rgba(144, 202, 249, 0.3);
+  }
+
+  .material-select option {
+    background-color: var(--background-surface);
+    color: var(--text-primary);
   }
 
   .material-checkbox {
-    @apply w-5 h-5;
-    background-color: white;
-    border: 2px solid var(--grey-400);
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: var(--background-surface);
+    border: 2px solid var(--border-color);
     border-radius: 2px;
     appearance: none;
     cursor: pointer;
@@ -237,20 +271,23 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
+    color: var(--background-main);
     font-size: 14px;
     font-weight: bold;
   }
 
   /* Material UI Buttons */
   .material-btn {
-    @apply px-4 py-2 font-medium text-sm uppercase tracking-wider;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02857em;
     border-radius: 4px;
     outline: none;
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-    letter-spacing: 0.02857em;
     min-height: 36px;
     border: none;
   }
@@ -273,7 +310,7 @@
   }
 
   .material-btn-outlined:hover {
-    background-color: rgba(25, 118, 210, 0.04);
+    background-color: rgba(144, 202, 249, 0.08);
     border-color: var(--primary-dark);
   }
 
@@ -284,7 +321,7 @@
   }
 
   .material-btn-text:hover {
-    background-color: rgba(25, 118, 210, 0.04);
+    background-color: rgba(144, 202, 249, 0.08);
   }
 
   .material-btn-success {
@@ -303,17 +340,25 @@
     box-shadow: none;
   }
 
+  .material-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+    background-color: var(--grey-200) !important;
+    color: var(--text-disabled) !important;
+  }
+
   .material-btn:disabled:hover {
-    background-color: var(--grey-300);
-    color: var(--grey-500);
+    background-color: var(--grey-200);
+    color: var(--text-disabled);
   }
 
   /* Button Circles - Material UI Fab Style */
   .button-circle {
     transition: all 0.2s ease;
     cursor: pointer;
-    background-color: white;
-    border: 1px solid var(--grey-300);
+    background-color: var(--background-surface);
+    border: 1px solid var(--border-color);
     color: var(--primary-main);
   }
 
@@ -329,23 +374,260 @@
     box-shadow: 0 0 8px rgba(46, 125, 50, 0.5);
   }
 
-  /* Scrollbar Styling */
+  /* Dark Theme Scrollbars */
   ::-webkit-scrollbar {
-    width: 12px;
+    width: 8px;
   }
   
   ::-webkit-scrollbar-track {
-    background-color: var(--grey-100);
+    background-color: var(--background-main);
   }
   
   ::-webkit-scrollbar-thumb {
     background-color: var(--grey-400);
-    border-radius: 6px;
-    border: 2px solid var(--grey-100);
+    border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--grey-600);
+    background-color: var(--grey-500);
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--grey-400) var(--background-main);
+  }
+
+  /* Utility classes for consistent spacing */
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+
+  .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 1rem;
+  }
+
+  .gap-6 {
+    gap: 1.5rem;
+  }
+
+  /* Flexbox utilities */
+  .flex {
+    display: flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .flex-1 {
+    flex: 1;
+  }
+
+  .items-center {
+    align-items: center;
+  }
+
+  .justify-between {
+    justify-content: space-between;
+  }
+
+  /* Grid utilities */
+  .grid {
+    display: grid;
+  }
+
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Responsive grid utilities */
+  @media (min-width: 768px) {
+    .md\:grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .md\:grid-cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .lg\:grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .lg\:grid-cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .xl\:grid-cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* Padding and margin utilities */
+  .p-2 { padding: 0.5rem; }
+  .p-3 { padding: 0.75rem; }
+  .p-4 { padding: 1rem; }
+  .p-6 { padding: 1.5rem; }
+  .p-8 { padding: 2rem; }
+
+  .px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+
+  .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+
+  .pb-3 { padding-bottom: 0.75rem; }
+
+  .mb-1 { margin-bottom: 0.25rem; }
+  .mb-2 { margin-bottom: 0.5rem; }
+  .mb-4 { margin-bottom: 1rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+
+  .mt-1 { margin-top: 0.25rem; }
+  .mt-2 { margin-top: 0.5rem; }
+  .mt-6 { margin-top: 1.5rem; }
+
+  .mr-2 { margin-right: 0.5rem; }
+  .mr-3 { margin-right: 0.75rem; }
+
+  /* Text utilities */
+  .text-center {
+    text-align: center;
+  }
+
+  .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .font-medium {
+    font-weight: 500;
+  }
+
+  .font-bold {
+    font-weight: 700;
+  }
+
+  .uppercase {
+    text-transform: uppercase;
+  }
+
+  /* Display utilities */
+  .block {
+    display: block;
+  }
+
+  .inline-block {
+    display: inline-block;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  /* Border utilities */
+  .border {
+    border-width: 1px;
+  }
+
+  .border-b {
+    border-bottom-width: 1px;
+  }
+
+  .rounded {
+    border-radius: 0.25rem;
+  }
+
+  .rounded-lg {
+    border-radius: 0.5rem;
+  }
+
+  .rounded-full {
+    border-radius: 9999px;
+  }
+
+  /* Width and height utilities */
+  .w-2 { width: 0.5rem; }
+  .w-5 { width: 1.25rem; }
+  .w-16 { width: 4rem; }
+  .w-full { width: 100%; }
+
+  .h-2 { height: 0.5rem; }
+  .h-5 { height: 1.25rem; }
+  .h-16 { height: 4rem; }
+  .h-full { height: 100%; }
+  .h-screen { height: 100vh; }
+
+  .min-h-screen {
+    min-height: 100vh;
+  }
+
+  .min-w-0 {
+    min-width: 0;
+  }
+
+  /* Position utilities */
+  .relative {
+    position: relative;
+  }
+
+  /* Overflow utilities */
+  .overflow-auto {
+    overflow: auto;
+  }
+
+  /* Opacity utilities */
+  .opacity-60 {
+    opacity: 0.6;
+  }
+
+  /* Cursor utilities */
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
+
+  /* Column span utilities */
+  .col-span-full {
+    grid-column: 1 / -1;
+  }
+
+  /* Transition utilities */
+  .transition-all {
+    transition: all 0.2s;
+  }
+
+  .duration-200 {
+    transition-duration: 0.2s;
   }
 
   /* Status Classes */
@@ -371,17 +653,19 @@
 
   /* Typography */
   .material-h1 {
-    font-size: 2.125rem;
+    font-size: 1rem;
     font-weight: 300;
     line-height: 1.235;
     letter-spacing: -0.00833em;
+    color: var(--text-primary);
   }
 
   .material-h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 400;
     line-height: 1.334;
     letter-spacing: 0em;
+    color: var(--text-primary);
   }
 
   .material-h3 {
@@ -389,6 +673,65 @@
     font-weight: 400;
     line-height: 1.6;
     letter-spacing: 0.0075em;
+    color: var(--text-primary);
+  }
+
+  h6 {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.0075em;
+    color: var(--grey-400);
+  }
+
+  /* Action configuration specific styles */
+  .action-config {
+    background-color: var(--background-surface) !important;
+    border: 1px solid var(--border-color);
+  }
+  
+  .action-config .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .action-config label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+  
+  .action-config input,
+  .action-config select,
+  .action-config textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--background-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+  }
+  
+  .action-config input:focus,
+  .action-config select:focus,
+  .action-config textarea:focus {
+    border-color: var(--primary-main);
+    box-shadow: 0 0 0 2px rgba(106, 192, 87, 0.3);
+  }
+  
+  .action-config input::placeholder,
+  .action-config textarea::placeholder {
+    color: var(--text-disabled);
+  }
+  
+  .action-config select option {
+    background-color: var(--background-surface);
+    color: var(--text-primary);
   }
 
   .material-body1 {
@@ -396,6 +739,7 @@
     font-weight: 400;
     line-height: 1.5;
     letter-spacing: 0.00938em;
+    color: var(--text-primary);
   }
 
   .material-body2 {
@@ -403,6 +747,7 @@
     font-weight: 400;
     line-height: 1.43;
     letter-spacing: 0.01071em;
+    color: var(--text-secondary);
   }
 
   .material-caption {
@@ -410,6 +755,7 @@
     font-weight: 400;
     line-height: 1.66;
     letter-spacing: 0.03333em;
+    color: var(--text-secondary);
   }
 
   /* Focus States */
@@ -418,23 +764,80 @@
     outline-offset: 2px;
   }
 
+  /* Labels and text elements */
+  label {
+    color: var(--text-primary);
+  }
+
+  .text-gray-700,
+  .text-gray-800 {
+    color: var(--text-primary) !important;
+  }
+
+  .text-gray-600,
+  .text-gray-500 {
+    color: var(--text-secondary) !important;
+  }
+
+  .text-gray-400 {
+    color: var(--text-disabled) !important;
+  }
+
+  /* Value text styling */
+  .value {
+    color: var(--text-primary);
+  }
+
+  /* Button grid improvements */
+  .button-grid {
+    gap: 1.5rem;
+  }
+
+  .button-config {
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+
+  .button-config:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Form improvements */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  /* Status improvements */
+  .status-grid {
+    gap: 1rem;
+  }
+
+  .status-item {
+    padding: 0.75rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+  }
+
+  .status-item:hover {
+    background-color: var(--background-surface);
+  }
+
   /* Selection styling */
   ::selection {
-    background-color: rgba(25, 118, 210, 0.2);
+    background-color: rgba(144, 202, 249, 0.3);
     color: inherit;
   }
 
   /* Dividers */
   .material-divider {
-    border-color: var(--grey-300);
+    border-color: var(--border-color);
   }
 
   /* Surfaces */
   .material-surface {
-    background-color: white;
+    background-color: var(--background-surface);
   }
 
   .material-background {
-    background-color: #fafafa;
+    background-color: var(--background-main);
   }
 }

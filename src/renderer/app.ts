@@ -27,7 +27,6 @@ class PatcomApp {
 
   constructor() {
     this.init();
-    this.setupTitleBar();
   }
 
   private async init(): Promise<void> {
@@ -476,10 +475,247 @@ class PatcomApp {
     }
   }
 
-  // Button Configuration (placeholder for future implementation)
+  // Button Configuration
   private setupButtonHandling(): void {
-    // Button configuration functionality would go here
-    console.log('Button handling setup - placeholder');
+    console.log('[BUTTON] Setting up button handling...');
+    
+    // Get all button configuration cards
+    const buttonConfigs = document.querySelectorAll('.button-config');
+    
+    buttonConfigs.forEach((buttonConfig, index) => {
+      const actionSelect = buttonConfig.querySelector('.button-action') as HTMLSelectElement;
+      const actionConfigDiv = buttonConfig.querySelector('.action-config') as HTMLDivElement;
+      const buttonNameInput = buttonConfig.querySelector('.button-name') as HTMLInputElement;
+      
+      if (actionSelect && actionConfigDiv) {
+        console.log(`[BUTTON] Setting up button ${index} action select`);
+        
+        // Handle action type changes
+        actionSelect.addEventListener('change', (e) => {
+          const selectedAction = (e.target as HTMLSelectElement).value;
+          console.log(`[BUTTON] Button ${index} action changed to:`, selectedAction);
+          this.updateActionConfig(actionConfigDiv, selectedAction, index);
+        });
+        
+        // Handle button name changes
+        if (buttonNameInput) {
+          buttonNameInput.addEventListener('change', (e) => {
+            const buttonName = (e.target as HTMLInputElement).value;
+            console.log(`[BUTTON] Button ${index} name changed to:`, buttonName);
+            this.updateButtonConfig(index, { name: buttonName });
+          });
+        }
+        
+        // Initialize with current selection
+        this.updateActionConfig(actionConfigDiv, actionSelect.value, index);
+      }
+    });
+    
+    console.log('[BUTTON] Button handling setup complete');
+  }
+
+  private updateActionConfig(actionConfigDiv: HTMLDivElement, actionType: string, buttonIndex: number): void {
+    console.log(`[BUTTON] Updating action config for button ${buttonIndex}, type: ${actionType}`);
+    
+    // Clear existing content
+    actionConfigDiv.innerHTML = '';
+    
+    if (actionType === 'none') {
+      actionConfigDiv.innerHTML = '<p class="text-sm text-gray-500">No action configured</p>';
+      return;
+    }
+    
+    // Create action-specific configuration UI
+    let configHTML = '';
+    
+    switch (actionType) {
+      case 'http':
+        configHTML = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
+              <input type="url" class="material-input text-sm action-url" placeholder="https://example.com/api">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Method</label>
+              <select class="material-select text-sm action-method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Headers (JSON)</label>
+              <textarea class="material-input text-sm action-headers" rows="2" placeholder='{"Content-Type": "application/json"}'></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Body (JSON)</label>
+              <textarea class="material-input text-sm action-body" rows="3" placeholder='{"button": ${buttonIndex}, "pressed": true}'></textarea>
+            </div>
+          </div>
+        `;
+        break;
+        
+      case 'webhook':
+        configHTML = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Webhook URL</label>
+              <input type="url" class="material-input text-sm action-webhook-url" placeholder="https://hooks.zapier.com/hooks/catch/...">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Payload (JSON)</label>
+              <textarea class="material-input text-sm action-webhook-payload" rows="3" placeholder='{"event": "button_press", "button": ${buttonIndex}}'></textarea>
+            </div>
+          </div>
+        `;
+        break;
+        
+      case 'midi':
+        configHTML = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">MIDI Channel</label>
+              <select class="material-select text-sm action-midi-channel">
+                ${Array.from({length: 16}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Note</label>
+              <input type="number" class="material-input text-sm action-midi-note" min="0" max="127" value="60" placeholder="60">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Velocity</label>
+              <input type="number" class="material-input text-sm action-midi-velocity" min="0" max="127" value="127" placeholder="127">
+            </div>
+          </div>
+        `;
+        break;
+        
+      case 'osc':
+        configHTML = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">OSC Address</label>
+              <input type="text" class="material-input text-sm action-osc-address" placeholder="/button/${buttonIndex}">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Host</label>
+              <input type="text" class="material-input text-sm action-osc-host" value="127.0.0.1" placeholder="127.0.0.1">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Port</label>
+              <input type="number" class="material-input text-sm action-osc-port" value="9000" placeholder="9000">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Arguments (comma-separated)</label>
+              <input type="text" class="material-input text-sm action-osc-args" placeholder="1, pressed">
+            </div>
+          </div>
+        `;
+        break;
+        
+      case 'script':
+        configHTML = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Script Path</label>
+              <input type="text" class="material-input text-sm action-script-path" placeholder="/path/to/script.sh">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Arguments</label>
+              <input type="text" class="material-input text-sm action-script-args" placeholder="arg1 arg2 arg3">
+            </div>
+          </div>
+        `;
+        break;
+        
+      case 'serial':
+        configHTML = `
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Command</label>
+              <input type="text" class="material-input text-sm action-serial-command" placeholder="LED_ON">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Parameters</label>
+              <input type="text" class="material-input text-sm action-serial-params" placeholder="255,0,0">
+            </div>
+          </div>
+        `;
+        break;
+        
+      default:
+        configHTML = '<p class="text-sm text-gray-500">Unknown action type</p>';
+    }
+    
+    actionConfigDiv.innerHTML = configHTML;
+    
+    // Add event listeners to the new form elements
+    this.setupActionConfigListeners(actionConfigDiv, buttonIndex);
+  }
+
+  private setupActionConfigListeners(actionConfigDiv: HTMLDivElement, buttonIndex: number): void {
+    const inputs = actionConfigDiv.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+      input.addEventListener('change', () => {
+        console.log(`[BUTTON] Action config changed for button ${buttonIndex}`);
+        this.saveButtonActionConfig(buttonIndex);
+      });
+    });
+  }
+
+  private updateButtonConfig(buttonIndex: number, updates: any): void {
+    if (!this.config.buttons) {
+      this.config.buttons = [];
+    }
+    
+    if (!this.config.buttons[buttonIndex]) {
+      this.config.buttons[buttonIndex] = {
+        name: `Button ${buttonIndex}`,
+        action: 'none',
+        config: {}
+      };
+    }
+    
+    Object.assign(this.config.buttons[buttonIndex], updates);
+    this.saveConfiguration();
+  }
+
+  private saveButtonActionConfig(buttonIndex: number): void {
+    const buttonConfig = document.querySelectorAll('.button-config')[buttonIndex];
+    if (!buttonConfig) return;
+    
+    const actionSelect = buttonConfig.querySelector('.button-action') as HTMLSelectElement;
+    const actionConfigDiv = buttonConfig.querySelector('.action-config') as HTMLDivElement;
+    
+    if (!actionSelect || !actionConfigDiv) return;
+    
+    const actionType = actionSelect.value;
+    const config: any = {};
+    
+    // Extract configuration based on action type
+    const inputs = actionConfigDiv.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      const element = input as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      const className = element.className;
+      
+      // Extract the config key from the class name (e.g., 'action-url' -> 'url')
+      const match = className.match(/action-(\w+(?:-\w+)*)/);
+      if (match) {
+        const key = match[1].replace(/-/g, '_'); // Convert kebab-case to snake_case
+        config[key] = element.value;
+      }
+    });
+    
+    this.updateButtonConfig(buttonIndex, {
+      action: actionType,
+      config: config
+    });
+    
+    console.log(`[BUTTON] Saved config for button ${buttonIndex}:`, { actionType, config });
   }
 
   // Device Connection
@@ -867,78 +1103,9 @@ class PatcomApp {
     }
   }
 
-  // Title Bar Setup
-  private setupTitleBar(): void {
-    const minimizeBtn = document.getElementById('minimize-btn');
-    const maximizeBtn = document.getElementById('maximize-btn');
-    const closeBtn = document.getElementById('close-btn');
-
-    if (minimizeBtn) {
-      minimizeBtn.addEventListener('click', async () => {
-        if (window.electronAPI?.windowMinimize) {
-          await window.electronAPI.windowMinimize();
-        }
-      });
-    }
-
-    if (maximizeBtn) {
-      maximizeBtn.addEventListener('click', async () => {
-        if (window.electronAPI?.windowMaximize) {
-          await window.electronAPI.windowMaximize();
-          this.updateMaximizeButton();
-        }
-      });
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', async () => {
-        if (window.electronAPI?.windowClose) {
-          await window.electronAPI.windowClose();
-        }
-      });
-    }
-
-    // Update maximize button icon on startup
-    this.updateMaximizeButton();
-
-    // Listen for window state changes (if needed)
-    window.addEventListener('resize', () => {
-      this.updateMaximizeButton();
-    });
-  }
-
-  private async updateMaximizeButton(): Promise<void> {
-    const maximizeBtn = document.getElementById('maximize-btn');
-    if (!maximizeBtn || !window.electronAPI?.windowIsMaximized) return;
-
-    try {
-      const isMaximized = await window.electronAPI.windowIsMaximized();
-      const svg = maximizeBtn.querySelector('svg');
-      
-      if (svg) {
-        if (isMaximized) {
-          // Show restore icon
-          svg.innerHTML = `
-            <rect x="2" y="4" width="6" height="6" stroke="currentColor" stroke-width="1" fill="none"/>
-            <rect x="4" y="2" width="6" height="6" stroke="currentColor" stroke-width="1" fill="none"/>
-          `;
-          maximizeBtn.title = 'Restore';
-        } else {
-          // Show maximize icon
-          svg.innerHTML = `
-            <rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1" fill="none"/>
-          `;
-          maximizeBtn.title = 'Maximize';
-        }
-      }
-    } catch (error) {
-      console.error('Failed to update maximize button:', error);
-    }
-  }
-
-  // UI Updates
   private updateUI(): void {
     this.updateNetworkUI();
+    this.updateButtonUI();
   }
 
   private updateNetworkUI(): void {
@@ -974,6 +1141,58 @@ class PatcomApp {
       statusElement.className = 'value';
     }
   }
+
+  private updateButtonUI(): void {
+    if (!this.config?.buttons) return;
+
+    const buttonConfigs = document.querySelectorAll('.button-config');
+    
+    buttonConfigs.forEach((buttonConfig, index) => {
+      const buttonData = this.config.buttons?.[index];
+      if (!buttonData) return;
+
+      const buttonNameInput = buttonConfig.querySelector('.button-name') as HTMLInputElement;
+      const actionSelect = buttonConfig.querySelector('.button-action') as HTMLSelectElement;
+      const actionConfigDiv = buttonConfig.querySelector('.action-config') as HTMLDivElement;
+
+      // Update button name
+      if (buttonNameInput && buttonData.name) {
+        buttonNameInput.value = buttonData.name;
+      }
+
+      // Update action type
+      if (actionSelect && buttonData.action) {
+        actionSelect.value = buttonData.action;
+        // Update the action configuration UI
+        this.updateActionConfig(actionConfigDiv, buttonData.action, index);
+        
+        // Populate the action configuration fields
+        if (buttonData.config && actionConfigDiv) {
+          setTimeout(() => {
+            this.populateActionConfig(actionConfigDiv, buttonData.config);
+          }, 10); // Small delay to ensure DOM is updated
+        }
+      }
+    });
+  }
+
+  private populateActionConfig(actionConfigDiv: HTMLDivElement, config: any): void {
+    const inputs = actionConfigDiv.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+      const element = input as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      const className = element.className;
+      
+      // Extract the config key from the class name
+      const match = className.match(/action-(\w+(?:-\w+)*)/);
+      if (match) {
+        const key = match[1].replace(/-/g, '_');
+        if (config[key] !== undefined) {
+          element.value = config[key];
+        }
+      }
+    });
+  }
 }
 
 // Global error handler
@@ -987,7 +1206,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('PATCOM Configurator starting...');
+  console.log('Packet Commander starting...');
   
   if (!window.electronAPI) {
     console.error('Electron API not available! Check preload script.');

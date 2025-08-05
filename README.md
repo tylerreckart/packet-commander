@@ -1,4 +1,4 @@
-# Packet Commander
+# ![PATCOM Icon](./assets/icons/icon-64.png) Packet Commander
 8-button WiFi controller with advanced configuration management, power optimization, and multi-protocol capabilities through its desktop application.
 
 ![PATCOM](./assets/patcom.png)
@@ -39,6 +39,9 @@ Packet Commander is a versatile IoT controller featuring 8 programmable buttons 
 5. Device will restart and connect to your network.
 
 ### 3. Desktop Configuration App
+
+![PATCOM Configurator](./assets/configurator.png)
+
 ```bash
 # Install dependencies
 npm install

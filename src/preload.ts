@@ -65,12 +65,6 @@ const electronAPIImpl: ElectronAPI = {
   // App utilities
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   showMessageBox: (options) => ipcRenderer.invoke('show-message-box', options),
-
-  // Window controls
-  windowMinimize: () => ipcRenderer.invoke('window-minimize'),
-  windowMaximize: () => ipcRenderer.invoke('window-maximize'),
-  windowClose: () => ipcRenderer.invoke('window-close'),
-  windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized')
 };
 
 // Expose the secure API to the renderer process

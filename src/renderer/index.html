@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packet Commander Configurator</title>
+    <title>Packet Commander</title>
     <link rel="stylesheet" href="../../dist/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-white text-gray-900">
+<body>
     <div class="app min-h-screen">
         <!-- Custom Title Bar -->
         <div class="title-bar flex items-center justify-between p-2" id="title-bar"></div>
@@ -17,14 +17,20 @@
         <div class="app-content flex-1 flex flex-col">
             <header class="header p-4">
             <div class="flex items-center justify-between">
-                <h1 class="material-h2 text-white font-medium">Packet Commander Configurator</h1>
+                <div class="flex items-center gap-4">
+                    <img src="../../assets/icons/icon.png" width="48px" height="48px" />
+                    <div class="flex flex-col">
+                        <h1 class="material-h3 text-white font-medium">Packet Commander</h1>
+                        <h6>Configurator Alpha v1.0.0</h6>
+                    </div>
+                </div>
                 <div class="device-status">
                     <span id="connection-status" class="status-disconnected text-sm">Disconnected</span>
                 </div>
             </div>
         </header>
 
-        <nav class="tabs px-4">
+        <nav class="tabs">
             <button class="tab-button active" data-tab="buttons">
                 Buttons
             </button>
@@ -44,174 +50,146 @@
             <div id="buttons-tab" class="tab-content active">
                 <div class="button-grid grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                     <div class="button-config material-card p-6">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">0</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 0">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="1">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">1</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 1">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="2">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">2</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 2">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
-                                    <option value="midi">MIDI Note</option>
-                                    <option value="osc">OSC Message</option>
-                                    <option value="script">Custom Script</option>
-                                    <option value="serial">Serial Command</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="3">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">3</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 3">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="4">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">4</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 4">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="5">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">5</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 5">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="6">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">6</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 6">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
 
                     <div class="button-config material-card p-6" data-button="7">
-                        <div class="button-visual flex items-center justify-center mb-4">
-                            <div class="button-circle w-16 h-16 rounded-lg flex items-center justify-center text-xl font-bold">7</div>
-                        </div>
                         <div class="button-controls space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Button Name</label>
+                                <label class="block text-sm font-medium mb-1">Button Name</label>
                                 <input type="text" class="material-input button-name" value="Button 7">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Action Type</label>
+                                <label class="block text-sm font-medium mb-1">Action Type</label>
                                 <select class="material-select button-action">
                                     <option value="none">None</option>
                                     <option value="http">HTTP Request</option>
                                     <option value="webhook">Webhook</option>
                                 </select>
                             </div>
-                            <div class="action-config material-card p-3 mt-2 bg-gray-50"></div>
+                            <div class="action-config material-card p-3 mt-2"></div>
                         </div>
                     </div>
                 </div>
@@ -225,7 +203,7 @@
                             <h3 class="material-h3 text-gray-800">Device Discovery</h3>
                             <span id="discovery-status" class="status-pending text-sm font-medium">Ready</span>
                         </div>
-                        <div class="flex gap-3 flex-wrap">
+                        <div class="flex gap-4">
                             <button id="discover-devices" class="material-btn material-btn-contained">
                                 Scan Devices
                             </button>
@@ -236,7 +214,7 @@
                     </div>
                     
                     <div class="discovered-devices">
-                        <h3 class="material-h3 text-gray-800 mb-4">Discovered Devices</h3>
+                        <h3 class="material-h3 mb-4">Discovered Devices</h3>
                         <div id="device-list" class="device-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="no-devices material-card p-8 text-center text-gray-500 col-span-full">
                                 <p class="text-sm">No devices discovered yet.</p>
@@ -251,38 +229,38 @@
             <!-- Network Settings Tab -->
             <div id="network-tab" class="tab-content">
                 <div class="settings-panel material-card p-6 max-w-2xl mx-auto">
-                    <h3 class="material-h3 text-gray-800 mb-6 border-b border-gray-300 pb-3">WiFi Configuration</h3>
+                    <h3 class="material-h3 mb-6 border-b material-divider pb-3">WiFi Configuration</h3>
                     <div class="form-group mb-4">
-                        <label for="wifi-ssid" class="block text-sm font-medium text-gray-700 mb-2">Network Name (SSID)</label>
+                        <label for="wifi-ssid" class="block text-sm font-medium mb-2">Network Name (SSID)</label>
                         <input type="text" id="wifi-ssid" class="material-input" placeholder="Enter WiFi network name">
                     </div>
                     <div class="form-group mb-6">
-                        <label for="wifi-password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <label for="wifi-password" class="block text-sm font-medium mb-2">Password</label>
                         <input type="password" id="wifi-password" class="material-input" placeholder="Enter WiFi password">
                     </div>
                     
-                    <h3 class="material-h3 text-gray-800 mb-6 border-b border-gray-300 pb-3">IP Configuration</h3>
+                    <h3 class="material-h3 mb-6 border-b material-divider pb-3">IP Configuration</h3>
                     <div class="form-group mb-6">
-                        <label class="flex items-center text-gray-700 text-sm font-medium">
+                        <label class="flex items-center text-sm font-medium">
                             <input type="checkbox" id="static-ip" class="material-checkbox mr-3"> Use Static IP
                         </label>
                     </div>
-                    <div id="static-ip-config" class="ip-config material-card p-4 space-y-4 bg-gray-50" style="display: none;">
+                    <div id="static-ip-config" class="ip-config material-card p-4 space-y-4" style="display: none;">
                         <div class="form-group">
-                            <label for="ip-address" class="block text-sm font-medium text-gray-700 mb-2">IP Address</label>
+                            <label for="ip-address" class="block text-sm font-medium mb-2">IP Address</label>
                             <input type="text" id="ip-address" class="material-input" placeholder="192.168.1.100">
                         </div>
                         <div class="form-group">
-                            <label for="subnet-mask" class="block text-sm font-medium text-gray-700 mb-2">Subnet Mask</label>
+                            <label for="subnet-mask" class="block text-sm font-medium mb-2">Subnet Mask</label>
                             <input type="text" id="subnet-mask" class="material-input" placeholder="255.255.255.0">
                         </div>
                         <div class="form-group">
-                            <label for="gateway" class="block text-sm font-medium text-gray-700 mb-2">Gateway</label>
+                            <label for="gateway" class="block text-sm font-medium mb-2">Gateway</label>
                             <input type="text" id="gateway" class="material-input" placeholder="192.168.1.1">
                         </div>
                     </div>
                     
-                    <div class="network-actions flex gap-3 mt-6 mb-6 flex-wrap">
+                    <div class="network-actions flex gap-4 mt-6 mb-6">
                         <button id="save-network-config" class="material-btn material-btn-contained">
                             Save Config
                         </button>
@@ -294,20 +272,20 @@
                         </button>
                     </div>
                     
-                    <div class="network-status material-card p-4 bg-gray-50">
-                        <h4 class="text-gray-800 text-sm font-medium mb-4">Network Status</h4>
+                    <div class="network-status material-card p-4">
+                        <h4 class="text-sm font-medium mb-4">Network Status</h4>
                         <div class="status-grid grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">Config</span>
-                                <span id="network-config-status" class="value text-gray-800 text-sm font-medium">Not Saved</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">Config</span>
+                                <span id="network-config-status" class="value text-sm font-medium">Not Saved</span>
                             </div>
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">Test</span>
-                                <span id="network-test-status" class="value text-gray-800 text-sm font-medium">Not Tested</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">Test</span>
+                                <span id="network-test-status" class="value text-sm font-medium">Not Tested</span>
                             </div>
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">Updated</span>
-                                <span id="network-last-updated" class="value text-gray-800 text-sm font-medium">Never</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">Updated</span>
+                                <span id="network-last-updated" class="value text-sm font-medium">Never</span>
                             </div>
                         </div>
                     </div>
@@ -318,9 +296,9 @@
             <!-- Device Tab -->
             <div id="device-tab" class="tab-content">
                 <div class="device-panel material-card p-6 max-w-2xl mx-auto">
-                    <h3 class="material-h3 text-gray-800 mb-6 border-b border-gray-300 pb-3">Device Connection</h3>
+                    <h3 class="material-h3 mb-6 border-b material-divider pb-3">Device Connection</h3>
                     <div class="form-group mb-4">
-                        <label for="serial-port" class="block text-sm font-medium text-gray-700 mb-2">Serial Port</label>
+                        <label for="serial-port" class="block text-sm font-medium mb-2">Serial Port</label>
                         <div class="port-controls flex gap-2 items-center flex-wrap">
                             <select id="serial-port" class="material-select flex-1 min-w-0">
                                 <option value="">Select a port...</option>
@@ -334,18 +312,18 @@
                         </div>
                     </div>
                     <div class="form-group mb-6">
-                        <label for="baud-rate" class="block text-sm font-medium text-gray-700 mb-2">Baud Rate</label>
+                        <label for="baud-rate" class="block text-sm font-medium mb-2">Baud Rate</label>
                         <select id="baud-rate" class="material-select">
                             <option value="9600">9600</option>
                             <option value="57600">57600</option>
                             <option value="115200" selected>115200</option>
                         </select>
                     </div>
-                    <div class="connection-controls flex gap-3 mt-6 flex-wrap mb-8">
+                    <div class="connection-controls flex gap-4 mt-6 mb-8">
                         <button id="connect-device" class="material-btn material-btn-contained">
                             Connect
                         </button>
-                        <button id="disconnect-device" class="material-btn material-btn-outlined" disabled>
+                        <button id="disconnect-device" class="material-btn material-btn-contained" disabled>
                             Disconnect
                         </button>
                         <button id="upload-config" class="material-btn material-btn-success" disabled>
@@ -353,24 +331,24 @@
                         </button>
                     </div>
                     
-                    <div class="device-info material-card p-4 bg-gray-50">
-                        <h4 class="text-gray-800 text-sm font-medium mb-4">Device Status</h4>
+                    <div class="device-info material-card p-4">
+                        <h4 class="text-sm font-medium mb-4">Device Status</h4>
                         <div class="status-grid grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">Connection</span>
-                                <span id="device-status" class="value text-gray-800 text-sm font-medium">Disconnected</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">Connection</span>
+                                <span id="device-status" class="value text-sm font-medium">Disconnected</span>
                             </div>
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">Battery</span>
-                                <span id="battery-level" class="value text-gray-800 text-sm font-medium">Unknown</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">Battery</span>
+                                <span id="battery-level" class="value text-sm font-medium">Unknown</span>
                             </div>
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">WiFi</span>
-                                <span id="wifi-status" class="value text-gray-800 text-sm font-medium">Unknown</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">WiFi</span>
+                                <span id="wifi-status" class="value text-sm font-medium">Unknown</span>
                             </div>
-                            <div class="status-item bg-white border border-gray-200 rounded p-3">
-                                <span class="label block text-xs text-gray-500 font-medium uppercase">Version</span>
-                                <span id="device-version" class="value text-gray-800 text-sm font-medium">Unknown</span>
+                            <div class="status-item border border-b rounded p-3">
+                                <span class="label block text-xs font-medium uppercase" style="color: var(--text-disabled);">Version</span>
+                                <span id="device-version" class="value text-sm font-medium">Unknown</span>
                             </div>
                         </div>
                     </div>

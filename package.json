@@ -1,5 +1,5 @@
 {
-  "name": "patcom-config",
+  "name": "packet-commander",
   "version": "1.0.0",
   "description": "Packet Commander Configurator - Modern Electron App",
   "main": "dist/main.js",
@@ -15,6 +15,8 @@
     "type-check": "tsc --noEmit",
     "electron-pack": "electron-builder",
     "dist": "npm run build && electron-builder --publish=never",
+    "clear-cache": "node clear-cache.js",
+    "fresh-start": "npm run clear-cache && npm run dev",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": ["patcom", "button-matrix", "iot", "configuration", "electron"],
@@ -40,7 +42,7 @@
   },
   "build": {
     "appId": "com.patcom.config",
-    "productName": "Packet Commander Configurator",
+    "productName": "Packet Commander",
     "directories": {
       "output": "build"
     },
@@ -56,15 +58,19 @@
         "to": "assets"
       }
     ],
+    "icon": "assets/icons/icon.icns",
     "mac": {
+      "icon": "assets/icons/icon.icns",
       "category": "public.app-category.utilities",
       "hardenedRuntime": true,
       "gatekeeperAssess": false
     },
     "win": {
+      "icon": "assets/icons/icon.ico",
       "target": "nsis"
     },
     "linux": {
+      "icon": "assets/icons/icon.png",
       "target": "AppImage"
     },
     "nsis": {

@@ -1,5 +1,18 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
+
+// Set app name as early as possible - multiple attempts for macOS
+app.setName('Packet Commander');
+
+// Also try setting app user model id for Windows and app bundle id for macOS
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.patcom.packet-commander');
+} else if (process.platform === 'darwin') {
+  // Force dock to update by setting app properties
+  process.env.npm_package_productName = 'Packet Commander';
+  process.env.npm_package_name = 'packet-commander';
+}
 import { SerialService } from './services/SerialService';
 import { ConfigService } from './services/ConfigService';
 import { DiscoveryService } from './services/DiscoveryService';
@@ -11,6 +24,13 @@ class PatcomApp {
   private discoveryService = new DiscoveryService();
 
   constructor() {
+    // Set the app name for macOS dock and app switcher - must be done before app ready
+    if (process.platform === 'darwin') {
+      app.setName('Packet Commander');
+      // Also try setting the dock badge to force refresh
+      app.dock?.setBadge('');
+    }
+    
     this.setupApp();
     this.setupIpcHandlers();
   }
@@ -18,6 +38,21 @@ class PatcomApp {
   private setupApp(): void {
     // Security: Enable secure defaults
     app.whenReady().then(() => {
+      // Set app name and icon early for macOS
+      if (process.platform === 'darwin') {
+        app.setName('Packet Commander');
+        
+        const iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon.icns');
+        if (fs.existsSync(iconPath)) {
+          try {
+            app.dock?.setIcon(iconPath);
+            console.log('App icon set in whenReady');
+          } catch (error) {
+            console.error('Failed to set app icon in whenReady:', error);
+          }
+        }
+      }
+      
       this.createWindow();
       this.createMenu();
       this.discoveryService.initialize();
@@ -46,11 +81,33 @@ class PatcomApp {
   }
 
   private createWindow(): void {
+    // For BrowserWindow, use PNG icons as they're more reliable
+    // Platform-specific dock/taskbar icons are handled separately
+    let iconPath: string = path.join(__dirname, '..', 'assets', 'icons', 'icon-256.png');
+
+    // Debug: Check if icon file exists
+    console.log('Attempting to load icon from:', iconPath);
+    console.log('Icon file exists:', fs.existsSync(iconPath));
+    
+    // Fallback to PNG if the platform-specific icon doesn't exist
+    if (!fs.existsSync(iconPath)) {
+      const fallbackPath = path.join(__dirname, '..', 'assets', 'patcom@1024.png');
+      console.log('Falling back to:', fallbackPath);
+      console.log('Fallback exists:', fs.existsSync(fallbackPath));
+      if (fs.existsSync(fallbackPath)) {
+        iconPath = fallbackPath;
+      }
+    }
+
+    // Store iconPath as class property for later use
+    (this as any).iconPath = iconPath;
+
     this.mainWindow = new BrowserWindow({
-      width: 1400,
-      height: 900,
+      width: 800,
+      height: 600,
       minWidth: 800,
       minHeight: 600,
+      maxWidth: 800,
       webPreferences: {
         // Modern security settings
         nodeIntegration: false,
@@ -60,7 +117,7 @@ class PatcomApp {
         experimentalFeatures: false,
         preload: path.join(__dirname, 'preload.js'),
       },
-      icon: path.join(__dirname, '../assets/patcom.png'),
+      icon: iconPath,
       show: false, // Don't show until ready
       frame: false,
       titleBarStyle: 'hidden'
@@ -72,6 +129,16 @@ class PatcomApp {
     // Show window when ready
     this.mainWindow.once('ready-to-show', () => {
       this.mainWindow?.show();
+      
+      // Explicitly set the dock icon on macOS
+      if (process.platform === 'darwin' && fs.existsSync((this as any).iconPath)) {
+        try {
+          app.dock?.setIcon((this as any).iconPath);
+          console.log('Dock icon set successfully');
+        } catch (error) {
+          console.error('Failed to set dock icon:', error);
+        }
+      }
       
       // Open dev tools in development
       if (process.argv.includes('--dev')) {
@@ -411,8 +478,8 @@ class PatcomApp {
   private async showAbout(): Promise<void> {
     await dialog.showMessageBox(this.mainWindow!, {
       type: 'info',
-      title: 'About PATCOM Configurator',
-      message: 'PATCOM Configurator',
+      title: 'About Packet Commander',
+      message: 'Packet Commander',
       detail: `Version: ${app.getVersion()}\n\nA modern configuration tool for Packet Commander devices.`,
       buttons: ['OK']
     });

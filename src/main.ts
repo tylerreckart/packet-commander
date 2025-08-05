@@ -27,6 +27,7 @@ class PatcomApp {
   private serialService = new SerialService();
   private configService = new ConfigService();
   private discoveryService = new DiscoveryService();
+  private iconPath: string = '';
 
   constructor() {
     // App name is already set at the top of the file before imports
@@ -85,24 +86,21 @@ class PatcomApp {
   private createWindow(): void {
     // For BrowserWindow, use PNG icons as they're more reliable
     // Platform-specific dock/taskbar icons are handled separately
-    let iconPath: string = path.join(__dirname, '..', 'assets', 'icons', 'icon-256.png');
+    this.iconPath = path.join(__dirname, '..', 'assets', 'icons', 'icon-256.png');
 
     // Debug: Check if icon file exists
-    console.log('Attempting to load icon from:', iconPath);
-    console.log('Icon file exists:', fs.existsSync(iconPath));
+    console.log('Attempting to load icon from:', this.iconPath);
+    console.log('Icon file exists:', fs.existsSync(this.iconPath));
     
     // Fallback to PNG if the platform-specific icon doesn't exist
-    if (!fs.existsSync(iconPath)) {
+    if (!fs.existsSync(this.iconPath)) {
       const fallbackPath = path.join(__dirname, '..', 'assets', 'patcom@1024.png');
       console.log('Falling back to:', fallbackPath);
       console.log('Fallback exists:', fs.existsSync(fallbackPath));
       if (fs.existsSync(fallbackPath)) {
-        iconPath = fallbackPath;
+        this.iconPath = fallbackPath;
       }
     }
-
-    // Store iconPath as class property for later use
-    (this as any).iconPath = iconPath;
 
     this.mainWindow = new BrowserWindow({
       width: 800,
@@ -119,7 +117,7 @@ class PatcomApp {
         experimentalFeatures: false,
         preload: path.join(__dirname, 'preload.js'),
       },
-      icon: iconPath,
+      icon: this.iconPath,
       show: false, // Don't show until ready
       frame: false,
       titleBarStyle: 'hidden'
@@ -133,9 +131,9 @@ class PatcomApp {
       this.mainWindow?.show();
       
       // Explicitly set the dock icon on macOS
-      if (process.platform === 'darwin' && fs.existsSync((this as any).iconPath)) {
+      if (process.platform === 'darwin' && fs.existsSync(this.iconPath)) {
         try {
-          app.dock?.setIcon((this as any).iconPath);
+          app.dock?.setIcon(this.iconPath);
           console.log('Dock icon set successfully');
         } catch (error) {
           console.error('Failed to set dock icon:', error);
@@ -188,11 +186,6 @@ class PatcomApp {
             accelerator: 'CmdOrCtrl+S',
             click: () => this.saveConfiguration()
           },
-          {
-            label: 'Save Configuration As...',
-            accelerator: 'CmdOrCtrl+Shift+S',
-            click: () => this.saveConfigurationAs()
-          },
           { type: 'separator' },
           {
             label: 'Exit',
@@ -209,17 +202,17 @@ class PatcomApp {
           {
             label: 'Connect Device',
             accelerator: 'CmdOrCtrl+D',
-            click: () => this.mainWindow?.webContents.send('menu-connect-device')
+            enabled: false
           },
           {
             label: 'Upload Configuration',
             accelerator: 'CmdOrCtrl+U',
-            click: () => this.mainWindow?.webContents.send('menu-upload-config')
+            enabled: false
           },
           { type: 'separator' },
           {
             label: 'Discover Network Devices',
-            click: () => this.mainWindow?.webContents.send('menu-discover-devices')
+            enabled: false
           }
         ]
       },
@@ -469,13 +462,6 @@ class PatcomApp {
     }
   }
 
-  private async saveConfigurationAs(): Promise<void> {
-    try {
-      await this.configService.saveConfigFile(this.mainWindow!);
-    } catch (error) {
-      await dialog.showErrorBox('Error', `Failed to save configuration: ${(error as Error).message}`);
-    }
-  }
 
   private async showAbout(): Promise<void> {
     await dialog.showMessageBox(this.mainWindow!, {

@@ -5,8 +5,6 @@ interface ElectronAPI {
   // Configuration management
   getConfig: () => Promise<any>;
   updateConfig: (config: any) => Promise<void>;
-  onConfigUpdated: (callback: (event: any, config: any) => void) => void;
-
   // Device operations
   getSerialPorts: () => Promise<any[]>;
   connectDevice: (port: string, baudRate: number) => Promise<{ success: boolean; message?: string }>;
@@ -14,8 +12,6 @@ interface ElectronAPI {
   uploadConfig: () => Promise<{ success: boolean; message?: string }>;
   autoDetectPATCOM: () => Promise<any>;
   getDeviceStatus: () => Promise<{ connected: boolean }>;
-  onDeviceIdentified: (callback: (event: any, deviceInfo: any) => void) => void;
-  onDeviceInfo: (callback: (event: any, deviceInfo: any) => void) => void;
 
   // Network discovery operations
   discoverDevices: () => Promise<void>;
@@ -23,8 +19,6 @@ interface ElectronAPI {
   syncAllDevices: () => Promise<void>;
   syncToDevice: (deviceId: string) => Promise<void>;
   getDeviceConfig: (deviceId: string) => Promise<any>;
-  onDeviceDiscovered: (callback: (event: any, device: any) => void) => void;
-  onConfigUpdateAck: (callback: (event: any, ack: any) => void) => void;
 
   // App info
   getAppVersion: () => Promise<string>;
@@ -41,7 +35,6 @@ const electronAPIImpl: ElectronAPI = {
   // Configuration operations
   getConfig: () => ipcRenderer.invoke('get-config'),
   updateConfig: (config) => ipcRenderer.invoke('update-config', config),
-  onConfigUpdated: (callback) => ipcRenderer.on('config-updated', callback),
 
   // Device operations
   getSerialPorts: () => ipcRenderer.invoke('get-serial-ports'),
@@ -50,8 +43,6 @@ const electronAPIImpl: ElectronAPI = {
   uploadConfig: () => ipcRenderer.invoke('upload-config'),
   autoDetectPATCOM: () => ipcRenderer.invoke('auto-detect-patcom'),
   getDeviceStatus: () => ipcRenderer.invoke('get-device-status'),
-  onDeviceIdentified: (callback) => ipcRenderer.on('device-identified', callback),
-  onDeviceInfo: (callback) => ipcRenderer.on('device-info', callback),
 
   // Discovery operations
   discoverDevices: () => ipcRenderer.invoke('discover-devices'),
@@ -59,8 +50,6 @@ const electronAPIImpl: ElectronAPI = {
   syncAllDevices: () => ipcRenderer.invoke('sync-all-devices'),
   syncToDevice: (deviceId) => ipcRenderer.invoke('sync-to-device', deviceId),
   getDeviceConfig: (deviceId) => ipcRenderer.invoke('get-device-config', deviceId),
-  onDeviceDiscovered: (callback) => ipcRenderer.on('device-discovered', callback),
-  onConfigUpdateAck: (callback) => ipcRenderer.on('config-update-ack', callback),
 
   // App utilities
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),

@@ -1,7 +1,7 @@
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 import { EventEmitter } from 'events';
-import { SerialPortInfo, DeviceInfo, ConnectionResult, DeviceMessage, ConfigData, ArduinoConfig } from '../types';
+import { SerialPortInfo, DeviceInfo, ConnectionResult, DeviceMessage, ConfigData } from '../types';
 
 export class SerialService extends EventEmitter {
   private serialPort: SerialPort | null = null;
@@ -265,15 +265,6 @@ export class SerialService extends EventEmitter {
     });
   }
 
-  async testButton(buttonIndex: number): Promise<ConnectionResult> {
-    if (!this.serialPort || !this.serialPort.isOpen) {
-      throw new Error('Device not connected');
-    }
-
-    const command = `TEST:${buttonIndex}\n`;
-    this.serialPort.write(command);
-    return { success: true, message: `Button ${buttonIndex} test sent` };
-  }
 
   isConnected(): boolean {
     return this.deviceConnected;
@@ -404,7 +395,6 @@ export class SerialService extends EventEmitter {
       'none': 0,      // ACTION_NONE
       'http': 1,      // ACTION_HTTP
       'webhook': 2,   // ACTION_WEBHOOK
-      'script': 0,    // Treat as none for now
     };
     const mappedValue = actionMap[electronAction] || 0;
     console.log('[ACTION-MAP] Mapped to Arduino action type:', mappedValue);

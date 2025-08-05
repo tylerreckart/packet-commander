@@ -35,21 +35,13 @@ export interface ConfigData {
   customConfig: string;
 }
 
-export type ActionType = 'none' | 'http' | 'webhook' | 'script';
+export type ActionType = 'none' | 'http' | 'webhook';
 
 export interface ActionConfig {
   url?: string;
   method?: string;
   body?: string;
   secret?: string;
-  note?: number;
-  velocity?: number;
-  channel?: number;
-  host?: string;
-  port?: number;
-  address?: string;
-  code?: string;
-  command?: string;
 }
 
 export interface SerialPortInfo {
@@ -95,25 +87,3 @@ export interface ConnectionResult {
   message: string;
 }
 
-export interface ArduinoConfig {
-  device: {
-    name: string;
-    brightness: number;
-    discoverable: boolean;
-  };
-  network: {
-    ssid: string;
-    password: string;
-    staticIP: boolean;
-    ip: string;
-    subnet: string;
-    gateway: string;
-  };
-  buttons: Array<{
-    id: number;
-    name: string;
-    action: number;
-    enabled: boolean;
-    config: Record<string, any>;
-  }>;
-}
